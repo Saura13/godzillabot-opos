@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded" 
 )
 
 DOCS_DIR = "documentos"
@@ -37,7 +37,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "HÍBRIDO: POTENCIA PC + COMODIDAD MÓVIL" ---
+# --- 3. DISEÑO VISUAL "GODZILLA HYBRID ULTRA" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE (Comunes) --- */
@@ -51,7 +51,32 @@ st.markdown("""
     /* --- ESTILOS DE PC (IMPACTO VISUAL) --- */
     @media only screen and (min-width: 769px) {
         
-        /* Cabecera Épica */
+        /* SIDEBAR PREMIUM EN PC */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+            border-right: 2px solid #4ade80; /* Línea neón separadora */
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Opciones del Radio Button (El Menú) como TARJETAS */
+        div[role="radiogroup"] > label {
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #bbf7d0;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        div[role="radiogroup"] > label:hover {
+            transform: translateX(5px); /* Se mueve a la derecha al pasar ratón */
+            border-color: #16a34a;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #f0fdf4;
+            cursor: pointer;
+        }
+
+        /* Cabecera Principal Épica */
         .header-container {
             background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
             padding: 30px;
@@ -59,13 +84,13 @@ st.markdown("""
             color: white;
             text-align: center;
             margin-bottom: 30px;
-            box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4); /* Sombra potente */
-            border-bottom: 5px solid #4ade80; /* Neón */
+            box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
+            border-bottom: 5px solid #4ade80;
         }
         .header-container h1 { font-size: 3rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; letter-spacing: 1px; }
 
-        /* Botones con Efecto 3D y Degradados */
+        /* Botones Generales */
         div.stButton > button {
             background: linear-gradient(45deg, #16a34a, #15803d);
             color: white;
@@ -75,32 +100,22 @@ st.markdown("""
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 4px solid #14532d; /* El borde que da efecto 3D */
+            border-bottom: 4px solid #14532d;
             transition: all 0.2s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
         div.stButton > button:hover {
-            transform: translateY(2px); /* Se hunde un poco al pasar el ratón */
+            transform: translateY(2px);
             border-bottom: 2px solid #14532d;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            background: linear-gradient(45deg, #22c55e, #16a34a); /* Brilla más */
+            background: linear-gradient(45deg, #22c55e, #16a34a);
         }
-        
         div.stButton > button:active {
-            transform: translateY(4px); /* Se hunde del todo al clicar */
+            transform: translateY(4px);
             border-bottom: 0px solid transparent;
-        }
-
-        /* Burbujas de chat elegantes */
-        div[data-testid="stChatMessage"] {
-            padding: 1.5rem;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
     }
 
-    /* --- ESTILOS MÓVIL (COMODIDAD TÁCTIL) --- */
+    /* --- ESTILOS MÓVIL (FUNCIONALIDAD) --- */
     @media only screen and (max-width: 768px) {
         
         .block-container {
@@ -122,7 +137,7 @@ st.markdown("""
         .header-container h1 { font-size: 1.5rem !important; margin: 0; }
         .header-container p { display: none; }
 
-        /* Botones Planos y Grandes (Touch Friendly) */
+        /* Botones Grandes */
         div.stButton > button {
             background-color: #16a34a;
             color: white;
@@ -131,38 +146,32 @@ st.markdown("""
             padding: 0.8rem;
             font-weight: bold;
             width: 100%;
-            min-height: 50px; /* Altura mínima para el dedo */
+            min-height: 50px;
             margin-bottom: 8px;
-            box-shadow: none; /* Quitamos sombras complejas en móvil */
         }
         
-        div.stButton > button:active {
-            background-color: #14532d; /* Oscuro al tocar */
-        }
-
-        /* Chat Legible */
-        div[data-testid="stChatMessage"] {
-            padding: 0.8rem;
-            margin-bottom: 0.5rem;
-            border-radius: 12px;
-        }
-        div[data-testid="stChatMessage"] p {
-            font-size: 16px !important;
-            line-height: 1.4;
+        /* El menú en móvil se queda simple para no saturar */
+        div[role="radiogroup"] > label {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
         }
     }
     
     /* COLORES DE CHAT (COMUNES) */
-    div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
+    div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; border-radius: 20px 20px 0 20px;}
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
-    div[data-testid="stChatMessage"]:nth-child(even) { background-color: #ffffff; border: 1px solid #bbf7d0; }
+    div[data-testid="stChatMessage"]:nth-child(even) { background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 20px 20px 20px 0;}
 
-    /* UPLOADER */
+    /* UPLOADER ESTILIZADO */
     div[data-testid="stFileUploader"] {
         background-color: white;
         border: 2px dashed #16a34a;
-        border-radius: 10px;
-        padding: 10px;
+        border-radius: 12px;
+        padding: 15px;
+    }
+    div[data-testid="stFileUploader"]:hover {
+        background-color: #f0fdf4;
+        border-color: #15803d;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -181,7 +190,7 @@ def save_session_history():
     path = os.path.join(HISTORY_DIR, f"Sesion_{timestamp}.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(st.session_state.messages, f, ensure_ascii=False, indent=4)
-    st.success(f"✅ Guardado")
+    st.success(f"✅ Sesión Guardada")
 
 def load_session_history(filename):
     path = os.path.join(HISTORY_DIR, filename)
@@ -189,7 +198,7 @@ def load_session_history(filename):
         with open(path, "r", encoding="utf-8") as f:
             st.session_state.messages = json.load(f)
         st.rerun()
-    except: st.error("Error")
+    except: st.error("Error al cargar")
 
 def create_word_docx(text_content):
     if not WORD_AVAILABLE: return None
@@ -249,35 +258,53 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada. Usa '###' para títulos."
 
-# --- 5. INTERFAZ LATERAL ---
+# --- 5. INTERFAZ LATERAL (EL MENÚ) ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=60) 
-    st.markdown("### 🦖 GodzillaBot")
+    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
+    st.markdown("## 🦖 Guarida")
     
-    with st.expander("📤 PDFs"):
-        up = st.file_uploader("Subir archivos", type="pdf")
+    with st.expander("📤 Cargar Temario (PDFs)", expanded=True):
+        up = st.file_uploader("Arrastra archivos aquí", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
     
-    files = st.multiselect("📚 Archivos:", [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')])
+    # Selector de archivos si hay disponibles
+    files_available = [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')]
+    if files_available:
+        files = st.multiselect("📚 Documentos Activos:", files_available, default=files_available)
+    else:
+        files = []
+        st.info("ℹ️ Sube PDFs para empezar.")
     
     st.markdown("---")
-    mode = st.radio("Modo:", ["💀 Simulacro", "💬 Chat", "📝 Resumen", "📊 Excel"])
+    st.markdown("### 🎯 Objetivo de Hoy")
+    # NOMBRES RESTAURADOS Y DETALLADOS
+    mode = st.radio(
+        "Selecciona estrategia:", 
+        [
+            "💀 Simulacro de Examen (Test)", 
+            "💬 Chat Interactivo con Temario", 
+            "📝 Resumen de Alto Rendimiento", 
+            "📊 Extracción de Datos a Excel"
+        ]
+    )
     
     st.markdown("---")
+    st.markdown("### 🧠 Memoria")
     c1, c2 = st.columns(2)
     if c1.button("💾 Guardar"): save_session_history()
-    if c2.button("🗑️ Borrar"): st.session_state.messages = []; st.rerun()
+    if c2.button("🗑️ Reiniciar"): st.session_state.messages = []; st.rerun()
     
     sessions = [f for f in os.listdir(HISTORY_DIR) if f.endswith('.json')]
     if sessions:
-        load = st.selectbox("Historial:", ["..."] + sorted(sessions, reverse=True))
-        if load != "..." and st.button("Cargar"): load_session_history(load)
+        st.markdown("###### Recuperar sesión:")
+        load = st.selectbox("Selecciona fecha:", ["..."] + sorted(sessions, reverse=True), label_visibility="collapsed")
+        if load != "..." and st.button("📂 Abrir Sesión"): load_session_history(load)
 
 # --- 6. ZONA PRINCIPAL ---
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot</h1>
-    <p>Oposiciones - Versión Híbrida</p>
+    <p>Plataforma de Oposiciones de Alto Rendimiento</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -286,19 +313,19 @@ if "messages" not in st.session_state: st.session_state.messages = []
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
-if prompt := st.chat_input("Escribe aquí..."):
+if prompt := st.chat_input("Escribe tu instrucción o pregunta..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     if not files:
-        st.warning("⚠️ Carga PDFs en el menú (arriba izquierda).")
+        st.warning("⚠️ ¡ALTO! No puedo trabajar sin documentos. Sube tus PDFs en el menú lateral.")
     else:
         with st.chat_message("assistant"):
             placeholder = st.empty()
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Pensando..."): 
+                with st.spinner("🦖 Analizando normativa y generando respuesta..."): 
                     text = extract_text_from_pdfs(files)
                 
                 prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
@@ -318,10 +345,10 @@ if prompt := st.chat_input("Escribe aquí..."):
                 with col1:
                     if WORD_AVAILABLE:
                         docx = create_word_docx(full_resp)
-                        st.download_button("📄 Word", docx, f"Godzilla_{datetime.now().strftime('%H%M')}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                        st.download_button("📄 Descargar en Word", docx, f"Godzilla_{datetime.now().strftime('%H%M')}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 
                 with col2:
-                    if "Tabular" in mode or "|" in full_resp:
-                        st.download_button("📊 Excel", full_resp, "datos.csv", "text/csv")
+                    if "Excel" in mode or "|" in full_resp:
+                        st.download_button("📊 Exportar a Excel", full_resp, "datos_oposicion.csv", "text/csv")
 
-            except Exception as e: st.error(f"Error: {e}")
+            except Exception as e: st.error(f"Error del sistema: {e}")
