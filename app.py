@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 import io
 import time
+import random
 
 # --- 1. SEGURIDAD DE LIBRERÍAS ---
 try:
@@ -38,20 +39,16 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. CEREBRO INTELIGENTE: SISTEMA DE PACIENCIA (BACKOFF) ---
+# --- 3. CEREBRO: CADENA DE MODELOS Y PACIENCIA ---
 @st.cache_resource
 def get_model_list():
-    """Obtiene los modelos disponibles una sola vez al arrancar"""
     try:
         all_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # Prioridad: Flash (Rápido) -> Pro (Potente) -> Legacy
         priorities = []
         for m in all_models:
             if 'flash' in m.lower(): priorities.append(m)
         for m in all_models:
             if 'pro' in m.lower() and 'vision' not in m.lower(): priorities.append(m)
-        
-        # Si no encuentra nada, usa los nombres estándar por defecto
         if not priorities: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
         return priorities
     except:
@@ -60,48 +57,61 @@ def get_model_list():
 MODELS_AVAILABLE = get_model_list()
 
 def generate_response_with_patience(prompt_text):
-    """
-    Intenta generar respuesta con 'Paciencia Automática'.
-    Si falla por cuota (429), ESPERA y reintenta en lugar de rendirse.
-    """
-    max_retries = 3  # Número de veces que insistirá
-    
+    max_retries = 3
     for attempt in range(max_retries):
-        # Probamos cada modelo disponible en la lista
         for model_name in MODELS_AVAILABLE:
             try:
                 model = genai.GenerativeModel(model_name)
-                # Si funciona, devolvemos la respuesta inmediatamente (STREAM)
                 return model.generate_content(prompt_text, stream=True)
-            
             except Exception as e:
                 error_msg = str(e)
-                # Si el error es de CUOTA (429), aplicamos PAUSA
                 if "429" in error_msg or "quota" in error_msg.lower():
-                    wait_time = (attempt + 1) * 5  # Espera 5s, luego 10s, luego 15s...
+                    wait_time = (attempt + 1) * 5
                     time.sleep(wait_time)
-                    continue # Vuelve a intentar con el siguiente modelo o reintento
-                
-                # Si es error 404 (Modelo no existe), pasamos al siguiente modelo rápido
+                    continue
                 if "404" in error_msg:
                     continue
-                
-                # Si es otro error, lo guardamos y seguimos
                 continue
-    
-    # Si tras todos los intentos y esperas sigue fallando:
     return "Error_Quota_Final"
 
-# --- 4. ARQUITECTURA VISUAL (CSS V14 - SIN CAMBIOS) ---
+# --- 4. DISEÑO VISUAL "MODO LECTURA LIMPIA" (Blanco y Negro) ---
 st.markdown("""
 <style>
-    /* === 1. LIMPIEZA === */
+    /* === 1. LIMPIEZA INTERFAZ === */
     [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. BOTÓN MENÚ (SIDEBAR) === */
+    /* === 2. FONDO Y TEXTO (CAMBIO IMPORTANTE) === */
+    /* Fondo blanco puro para leer sin cansarse */
+    .stApp { 
+        background-color: #ffffff !important; 
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    /* === 3. BURBUJAS DE CHAT === */
+    /* Usuario: Verde Godzilla (para diferenciar) */
+    div[data-testid="stChatMessage"]:nth-child(odd) { 
+        background-color: #15803d; 
+        color: white;
+        border: none;
+    }
+    div[data-testid="stChatMessage"]:nth-child(odd) * { 
+        color: white !important; 
+    }
+    
+    /* IA: Gris muy suave, casi blanco, con texto negro nítido */
+    div[data-testid="stChatMessage"]:nth-child(even) { 
+        background-color: #f9fafb; /* Gris humo muy claro */
+        border: 1px solid #e5e7eb;
+        color: #1f2937; /* Gris muy oscuro (casi negro) para lectura fácil */
+    }
+    div[data-testid="stChatMessage"]:nth-child(even) * { 
+        color: #1f2937 !important;
+    }
+
+    /* === 4. BOTÓN MENÚ === */
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
@@ -111,16 +121,12 @@ st.markdown("""
         width: 45px !important;
         height: 45px !important;
         padding: 5px !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
         z-index: 999999 !important; 
-        position: fixed;
-        top: 15px;
-        left: 15px;
+        position: fixed; top: 15px; left: 15px;
     }
-    
-    /* === 3. ESTÉTICA === */
-    .stApp { background-color: #f0fdf4; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
+    /* === 5. CABECERA (SOLO VISUAL) === */
     .header-container {
         background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
         padding: 30px;
@@ -128,70 +134,49 @@ st.markdown("""
         color: white;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
-        border-bottom: 5px solid #4ade80;
+        /* Quitamos el verde neón de abajo que cansaba */
+        border-bottom: 5px solid #166534; 
         margin-top: 50px;
     }
-    .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
-    .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
+    .header-container h1 { font-size: 2.5rem; margin: 0; font-weight: 800;}
+    .header-container p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
 
+    /* === 6. TABLAS (Scroll) === */
     div[data-testid="stMarkdownContainer"] table {
-        display: block; overflow-x: auto; width: 100%; border-collapse: collapse; border: 1px solid #bbf7d0;
+        display: block; overflow-x: auto; width: 100%; border-collapse: collapse; 
+        border: 1px solid #e5e7eb; /* Borde gris suave */
     }
     div[data-testid="stMarkdownContainer"] th {
-        background-color: #14532d; color: white; padding: 12px; min-width: 100px; text-align: left;
+        background-color: #f3f4f6; /* Cabecera gris claro */
+        color: #111827; /* Texto negro */
+        padding: 12px; min-width: 100px; text-align: left; border-bottom: 2px solid #d1d5db;
     }
     div[data-testid="stMarkdownContainer"] td {
         padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
     }
 
-    @media only screen and (min-width: 769px) {
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-            border-right: 2px solid #4ade80;
-        }
-        div[role="radiogroup"] > label {
-            background-color: white; padding: 12px; border-radius: 8px; margin-bottom: 8px;
-            border: 1px solid #bbf7d0; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        div[role="radiogroup"] > label:hover {
-            transform: translateX(5px); border-color: #16a34a; background-color: #f0fdf4; cursor: pointer;
-        }
-        div.stButton > button {
-            background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 10px;
-            padding: 12px; border-bottom: 4px solid #14532d; font-weight: bold; text-transform: uppercase;
-        }
-        div.stButton > button:hover { transform: translateY(2px); border-bottom: 2px solid #14532d; }
-    }
-
+    /* Media Queries (Móvil) */
     @media only screen and (max-width: 768px) {
-        .block-container {
-            padding-top: 4rem !important; 
-            padding-left: 0.8rem !important; padding-right: 0.8rem !important;
-        }
+        .block-container { padding-top: 4rem !important; padding-left: 1rem; padding-right: 1rem; }
         .header-container { padding: 20px; margin-bottom: 20px; margin-top: 40px; }
         .header-container h1 { font-size: 1.8rem !important; }
-        .header-container p { font-size: 0.9rem !important; display: block; }
-
-        div.stButton > button {
-            background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 8px;
-            padding: 0.8rem; width: 100%; min-height: 50px; font-weight: bold;
-        }
+        div.stButton > button { width: 100%; min-height: 50px; }
     }
-
+    /* Media Queries (PC) */
+    @media only screen and (min-width: 769px) {
+        section[data-testid="stSidebar"] {
+            background-color: #f9fafb; border-right: 1px solid #e5e7eb;
+        }
+        div.stButton > button { width: auto; min-width: 200px; }
+    }
+    
+    /* Landscape */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 1rem !important; }
-        .header-container {
-            padding: 5px !important; margin-bottom: 10px !important; margin-top: 0px;
-            display: flex; align-items: center; justify-content: center; min-height: 40px;
-        }
+        .header-container { padding: 5px !important; margin-top: 0px; min-height: 40px; display: flex; align-items: center; justify-content: center;}
         .header-container h1 { font-size: 1.2rem !important; margin: 0; }
         .header-container p { display: none !important; }
     }
-    
-    div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
-    div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
-    div[data-testid="stChatMessage"]:nth-child(even) { background-color: white; border: 1px solid #bbf7d0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -249,16 +234,37 @@ def extract_text_from_pdfs(file_list):
         except: pass
     return text
 
+# --- 6. CEREBRO: RULETA DE EXAMINADORES (RECUPERADA) ---
 def get_system_prompt(mode):
-    base = "Eres GodzillaBot. Base: PDFs adjuntos. "
+    base = "Eres GodzillaBot, experto en legislación y oposiciones. Usas los PDFs adjuntos como fuente de verdad absoluta. "
+    
     if "Simulacro" in mode:
-        return base + "MODO: Simulacro (Ruleta). SALIDA: Cuestionario numerado y Clave de Respuestas final."
+        # RULETA DE PERSONALIDADES ALEATORIA
+        personalidades = [
+            "EL MINUCIOSO: Te centras en plazos, porcentajes y excepciones raras.",
+            "EL CONCEPTUAL: Preguntas sobre la naturaleza jurídica y definiciones exactas.",
+            "EL TRAMPOSO: Buscas confundir con términos muy similares y juegos de palabras.",
+            "EL PRÁCTICO: Planteas casos prácticos breves aplicados a la realidad administrativa."
+        ]
+        examinador = random.choice(personalidades)
+        
+        return base + f"""
+        MODO: SIMULACRO DE EXAMEN (TEST).
+        PERSONALIDAD ACTIVA: {examinador}
+        
+        INSTRUCCIONES ESTRICTAS:
+        1. Genera preguntas tipo test con EXACTAMENTE 4 opciones (a, b, c, d).
+        2. Solo UNA es correcta.
+        3. Al final del todo, proporciona la 'HOJA DE RESPUESTAS' con la solución y el artículo de referencia.
+        4. No des explicaciones entre preguntas, solo el test puro.
+        """
+        
     elif "Excel" in mode:
-        return base + "Salida: Tabla compatible con Excel (separador |)."
+        return base + "Salida: Tabla compatible con Excel (separador |). Concepto | Dato | Art | Nota."
     else:
-        return base + "Responde de forma técnica y estructurada."
+        return base + "Responde de forma técnica, estructurada y profesional."
 
-# --- 6. MENÚ LATERAL ---
+# --- 7. INTERFAZ Y LÓGICA ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -296,7 +302,6 @@ with st.sidebar:
         load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
         if load != "..." and st.button("Abrir"): load_session_history(load)
 
-# --- 7. ZONA PRINCIPAL ---
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot Oposiciones</h1>
@@ -321,8 +326,7 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                # Usamos la nueva lógica de paciencia
-                with st.spinner("🦖 Procesando (Si tardo un poco, estoy negociando con Google)..."): 
+                with st.spinner("🦖 Procesando (Negociando cuota con Google)..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
@@ -330,7 +334,7 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
                         st.error("🛑 Agotado total. Google me pide descansar unos minutos.")
-                        st.caption("Consejo: Intenta preguntas más cortas o espera 2-3 min.")
+                        st.caption("Consejo: Espera 2-3 min para recargar energía.")
                         full_resp = "Error cuota."
                     else:
                         for chunk in response_obj:
