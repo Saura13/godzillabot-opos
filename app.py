@@ -37,7 +37,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA V6 - TABLAS INTELIGENTES" ---
+# --- 3. DISEÑO VISUAL "GODZILLA V7 - BUG FIXES" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE (Comunes) --- */
@@ -48,10 +48,19 @@ st.markdown("""
     #MainMenu, footer {visibility: hidden;}
     header {background-color: transparent !important;}
 
+    /* CORRECCIÓN BOTÓN SIDEBAR: Forzamos que sea visible y verde */
+    [data-testid="stSidebarCollapsedControl"] {
+        color: #14532d !important; /* Color verde oscuro */
+        background-color: rgba(255, 255, 255, 0.5); /* Fondo semitransparente */
+        border-radius: 50%;
+        padding: 5px;
+        z-index: 999999 !important; /* Asegura que esté por encima de todo */
+    }
+
     /* --- SOLUCIÓN TABLAS V6: Texto envuelto y scroll equilibrado --- */
     div[data-testid="stMarkdownContainer"] table {
         display: block;
-        overflow-x: auto; /* Scroll solo si hace falta */
+        overflow-x: auto; 
         width: 100%;
         border-collapse: collapse;
         border: 1px solid #bbf7d0;
@@ -62,19 +71,19 @@ st.markdown("""
         color: white;
         padding: 12px;
         text-align: left;
-        white-space: normal !important; /* Permite saltos de línea en títulos */
-        min-width: 100px; /* Ancho mínimo para títulos */
+        white-space: normal !important;
+        min-width: 100px;
     }
     
     div[data-testid="stMarkdownContainer"] td {
         padding: 10px;
         border-bottom: 1px solid #eee;
-        vertical-align: top; /* Texto alineado arriba */
-        white-space: normal !important; /* ¡CLAVE! Permite que el texto baje de línea */
-        word-wrap: break-word; /* Rompe palabras larguísimas si es necesario */
-        min-width: 120px; /* Cada columna tendrá al menos este ancho */
-        max-width: 300px; /* Pero no será más ancha que esto, forzando salto de línea */
-        line-height: 1.5; /* Espaciado cómodo para leer */
+        vertical-align: top; 
+        white-space: normal !important; 
+        word-wrap: break-word; 
+        min-width: 120px; 
+        max-width: 300px; 
+        line-height: 1.5; 
     }
 
     /* --- ESTILOS DE PC (IMPACTO VISUAL) --- */
@@ -144,12 +153,11 @@ st.markdown("""
     @media only screen and (max-width: 768px) {
         
         .block-container {
-            padding-top: 2rem !important;
+            padding-top: 3rem !important; /* Más espacio arriba para que el botón no se monte */
             padding-left: 0.5rem !important; 
             padding-right: 0.5rem !important;
         }
 
-        /* Cabecera Móvil Vertical */
         .header-container {
             background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
             padding: 15px;
@@ -195,7 +203,6 @@ st.markdown("""
         div[data-testid="stSidebar"] { width: 100px !important; } 
     }
     
-    /* COLORES DE CHAT */
     div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; border-radius: 20px 20px 0 20px;}
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
     div[data-testid="stChatMessage"]:nth-child(even) { background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 20px 20px 20px 0;}
@@ -300,17 +307,16 @@ with st.sidebar:
         up = st.file_uploader("Arrastra archivos aquí", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
     
-    # Selector de archivos si hay disponibles
+    # Selector de archivos (CORREGIDO: Ya no se seleccionan todos por defecto)
     files_available = [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')]
     if files_available:
-        files = st.multiselect("📚 Documentos Activos:", files_available, default=files_available)
+        files = st.multiselect("📚 Documentos Activos:", files_available, default=[]) # Default vacío
     else:
         files = []
         st.info("ℹ️ Sube PDFs para empezar.")
     
     st.markdown("---")
     st.markdown("### 🎯 Objetivo de Hoy")
-    # NOMBRES RESTAURADOS Y DETALLADOS
     mode = st.radio(
         "Selecciona estrategia:", 
         [
@@ -351,7 +357,7 @@ if prompt := st.chat_input("Escribe tu instrucción o pregunta..."):
     with st.chat_message("user"): st.markdown(prompt)
 
     if not files:
-        st.warning("⚠️ ¡ALTO! No puedo trabajar sin documentos. Sube tus PDFs en el menú lateral.")
+        st.warning("⚠️ ¡ALTO! No has seleccionado ningún documento del menú lateral.")
     else:
         with st.chat_message("assistant"):
             placeholder = st.empty()
