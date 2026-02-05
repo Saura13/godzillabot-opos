@@ -37,55 +37,51 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA GREEN" ---
+# --- 3. DISEÑO VISUAL "GODZILLA GREEN" (OPTIMIZADO MÓVIL) ---
 st.markdown("""
 <style>
     /* Fuente y Fondo General */
     .stApp {
-        background-color: #f0fdf4; /* Verde muy pálido de fondo */
+        background-color: #f0fdf4;
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }
     
-    /* CORRECCIÓN: OCULTAR SOLO MENÚ Y FOOTER, PERO DEJAR HEADER VISIBLE 
-       Esto permite que el botón de "Mostrar Sidebar" siga existiendo */
+    /* ELEMENTOS DE NAVEGACIÓN */
     #MainMenu, footer {visibility: hidden;}
-    
-    /* Opcional: Hacer el header transparente para que no moleste visualmente */
-    header {
-        background-color: transparent !important;
-    }
+    header {background-color: transparent !important;}
 
-    /* CABECERA GODZILLA */
+    /* CABECERA GODZILLA (Escritorio) */
     .header-container {
-        background: linear-gradient(90deg, #14532d 0%, #15803d 100%); /* Degradado Verde Oscuro */
+        background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
         padding: 25px;
         border-radius: 12px;
         color: white;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         box-shadow: 0 4px 15px rgba(21, 128, 61, 0.3);
-        border-bottom: 4px solid #4ade80; /* Línea neón abajo */
+        border-bottom: 4px solid #4ade80;
     }
-    
+    .header-container h1 { font-size: 2.5rem; margin: 0; }
+    .header-container p { font-size: 1rem; opacity: 0.9; margin-top: 5px; }
+
     /* BURBUJAS DE CHAT */
-    /* Usuario: Verde Bosque Profundo */
+    div[data-testid="stChatMessage"] {
+        padding: 1rem;
+        margin-bottom: 10px;
+    }
+    /* Usuario */
     div[data-testid="stChatMessage"]:nth-child(odd) {
         background-color: #14532d; 
         color: white;
-        border: none;
         border-radius: 20px 20px 0 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    div[data-testid="stChatMessage"]:nth-child(odd) * {
-        color: white !important;
-    }
+    div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
     
-    /* IA: Blanco Limpio con borde verde sutil */
+    /* IA */
     div[data-testid="stChatMessage"]:nth-child(even) {
         background-color: #ffffff;
         border: 1px solid #bbf7d0;
         border-radius: 20px 20px 20px 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
     
     /* BOTONES */
@@ -94,32 +90,49 @@ st.markdown("""
         color: white;
         border-radius: 12px;
         border: none;
-        padding: 12px 20px;
+        padding: 12px;
         font-weight: 700;
-        transition: all 0.3s ease;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 14px;
         width: 100%;
-        border-bottom: 3px solid #14532d; /* Efecto 3D */
+        border-bottom: 3px solid #14532d;
     }
-    div.stButton > button:hover {
-        transform: translateY(-2px);
-        background: linear-gradient(45deg, #22c55e, #16a34a);
-        box-shadow: 0 5px 15px rgba(22, 163, 74, 0.4);
-    }
-    
+
     /* UPLOADER */
     div[data-testid="stFileUploader"] {
         background-color: white;
-        border: 2px dashed #16a34a; /* Borde verde */
+        border: 2px dashed #16a34a;
         border-radius: 15px;
-        padding: 20px;
+        padding: 15px;
     }
-    
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #f0fdf4;
+
+    /* --- MODO MÓVIL (La Magia) --- */
+    @media only screen and (max-width: 600px) {
+        /* Reducir cabecera drásticamente */
+        .header-container {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        .header-container h1 {
+            font-size: 1.5rem; /* Título mucho más pequeño */
+        }
+        .header-container p {
+            font-size: 0.8rem; /* Subtítulo pequeño */
+            display: none; /* Ocultar subtítulo si molesta */
+        }
+        
+        /* Ajustar padding general de la app */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        
+        /* Botones más compactos */
+        div.stButton > button {
+            padding: 10px;
+            font-size: 12px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
