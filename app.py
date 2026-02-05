@@ -8,7 +8,7 @@ from datetime import datetime
 import io
 import time
 
-# --- 1. SEGURIDAD DE LIBRERÍAS (Solo Word) ---
+# --- 1. SEGURIDAD DE LIBRERÍAS ---
 try:
     from docx import Document
     from docx.shared import Pt
@@ -38,14 +38,11 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO V12 - MANTENIDO) ---
+# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO V12 - SIN CAMBIOS) ---
 st.markdown("""
 <style>
-    /* === 1. LIMPIEZA DE ENTORNO (Adiós Publicidad) === */
-    [data-testid="stHeader"] {
-        background-color: transparent !important;
-        z-index: 90 !important;
-    }
+    /* === 1. LIMPIEZA DE ENTORNO === */
+    [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
@@ -54,8 +51,8 @@ st.markdown("""
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
-        border: 2px solid #16a34a !important; /* Borde Verde */
-        color: #16a34a !important; /* Icono Verde */
+        border: 2px solid #16a34a !important;
+        color: #16a34a !important;
         border-radius: 50% !important;
         width: 45px !important;
         height: 45px !important;
@@ -68,13 +65,9 @@ st.markdown("""
         background-color: #f0fdf4 !important;
     }
 
-    /* === 3. ESTÉTICA GENERAL (PC & MÓVIL) === */
-    .stApp {
-        background-color: #f0fdf4;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
+    /* === 3. ESTÉTICA GENERAL === */
+    .stApp { background-color: #f0fdf4; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-    /* Cabecera Épica */
     .header-container {
         background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
         padding: 30px;
@@ -89,7 +82,6 @@ st.markdown("""
     .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
     .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
 
-    /* Tablas Inteligentes (Scroll) */
     div[data-testid="stMarkdownContainer"] table {
         display: block; overflow-x: auto; width: 100%; border-collapse: collapse; border: 1px solid #bbf7d0;
     }
@@ -100,7 +92,6 @@ st.markdown("""
         padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
     }
 
-    /* === 4. AJUSTES ESPECÍFICOS PARA PC === */
     @media only screen and (min-width: 769px) {
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
@@ -120,7 +111,6 @@ st.markdown("""
         div.stButton > button:hover { transform: translateY(2px); border-bottom: 2px solid #14532d; }
     }
 
-    /* === 5. AJUSTES ESPECÍFICOS PARA MÓVIL === */
     @media only screen and (max-width: 768px) {
         .block-container {
             padding-top: 4.5rem !important; 
@@ -136,7 +126,6 @@ st.markdown("""
         }
     }
 
-    /* === 6. MODO HORIZONTAL (LANDSCAPE) === */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 1rem !important; }
         .header-container {
@@ -156,28 +145,28 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. LÓGICA TODOTERRENO (SOLUCIÓN ERROR 404) ---
+# --- 4. LÓGICA TODOTERRENO (SOLUCIÓN ERROR 404 - ACTUALIZADA 2026) ---
 def generate_smart_response(prompt_text):
-    # Lista de prioridades: 
-    # 1. Flash (Rápido y Moderno)
-    # 2. Pro (Más potente, respaldo)
-    # 3. Gemini-Pro (El clásico que nunca falla por antigüedad)
-    
-    models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    # Intentamos primero con los modelos nuevos (Serie 2.0)
+    # Si fallan, probamos los "antiguos" pero estables
+    models_to_try = [
+        'gemini-2.0-flash',   # El estándar rápido actual
+        'gemini-2.0-pro',     # El estándar potente actual
+        'gemini-1.5-flash',   # El rápido anterior (por si acaso)
+        'gemini-1.5-pro'      # El potente anterior (por si acaso)
+    ]
     
     last_error = ""
 
     for model_name in models_to_try:
         try:
             model = genai.GenerativeModel(model_name)
-            # Intentamos generar respuesta con el modelo actual
             return model.generate_content(prompt_text, stream=True)
         except Exception as e:
-            # Si falla, guardamos el error y probamos el siguiente modelo del bucle
             last_error = str(e)
-            continue
+            continue # Si falla, prueba el siguiente de la lista
     
-    # Si llegamos aquí, han fallado los 3 modelos. Analizamos el último error.
+    # Si llegamos aquí, han fallado todos.
     if "429" in last_error or "quota" in last_error.lower():
         return f"Error_Quota: {last_error}"
     else:
