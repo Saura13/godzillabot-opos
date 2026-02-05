@@ -38,10 +38,49 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO V12 - SIN CAMBIOS) ---
+# --- 3. SUBRUTINA DE AUTODESCUBRIMIENTO DE MODELOS (TU IDEA MAESTRA) ---
+@st.cache_resource
+def get_best_available_model():
+    """
+    Pregunta a la API qué modelos existen y elige el mejor disponible
+    para evitar errores 404 por nombres incorrectos.
+    """
+    try:
+        # 1. Obtenemos la lista real de modelos disponibles para tu API Key
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                available_models.append(m.name)
+        
+        # 2. Lógica de selección (Prioridad: Flash > Pro > Cualquiera)
+        # Buscamos si existe alguno "flash" (rápido y barato)
+        for model in available_models:
+            if 'flash' in model.lower():
+                return model
+        
+        # Si no, buscamos alguno "pro" (potente)
+        for model in available_models:
+            if 'pro' in model.lower():
+                return model
+                
+        # Si no, devolvemos el primero que funcione (ej: gemini-1.0-pro)
+        if available_models:
+            return available_models[0]
+            
+        # Fallback de emergencia total
+        return "models/gemini-pro"
+        
+    except Exception as e:
+        # Si falla el listado, usamos el clásico seguro
+        return "models/gemini-pro"
+
+# Ejecutamos la subrutina al inicio
+CURRENT_MODEL_NAME = get_best_available_model()
+
+# --- 4. ARQUITECTURA VISUAL (V12 - MANTENIDA) ---
 st.markdown("""
 <style>
-    /* === 1. LIMPIEZA DE ENTORNO === */
+    /* === 1. LIMPIEZA === */
     [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
@@ -145,32 +184,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. LÓGICA TODOTERRENO (SOLUCIÓN ERROR 404 - ACTUALIZADA 2026) ---
-def generate_smart_response(prompt_text):
-    # Intentamos primero con los modelos nuevos (Serie 2.0)
-    # Si fallan, probamos los "antiguos" pero estables
-    models_to_try = [
-        'gemini-2.0-flash',   # El estándar rápido actual
-        'gemini-2.0-pro',     # El estándar potente actual
-        'gemini-1.5-flash',   # El rápido anterior (por si acaso)
-        'gemini-1.5-pro'      # El potente anterior (por si acaso)
-    ]
-    
-    last_error = ""
-
-    for model_name in models_to_try:
-        try:
-            model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt_text, stream=True)
-        except Exception as e:
-            last_error = str(e)
-            continue # Si falla, prueba el siguiente de la lista
-    
-    # Si llegamos aquí, han fallado todos.
-    if "429" in last_error or "quota" in last_error.lower():
-        return f"Error_Quota: {last_error}"
-    else:
-        return f"Error_Gen: {last_error}"
+# --- 5. LÓGICA DE RESPUESTA USANDO EL MODELO DETECTADO ---
+def generate_response(prompt_text):
+    try:
+        # Usamos la variable global descubierta al inicio
+        model = genai.GenerativeModel(CURRENT_MODEL_NAME)
+        return model.generate_content(prompt_text, stream=True)
+    except Exception as e:
+        error_msg = str(e)
+        if "429" in error_msg or "quota" in error_msg.lower():
+             return f"Error_Quota: {error_msg}"
+        else:
+             return f"Error_Gen: {error_msg}"
 
 def save_uploaded_file(uploaded_file):
     try:
@@ -234,7 +259,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 5. MENÚ LATERAL ---
+# --- 6. MENÚ LATERAL ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -272,7 +297,7 @@ with st.sidebar:
         load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
         if load != "..." and st.button("Abrir"): load_session_history(load)
 
-# --- 6. ZONA PRINCIPAL ---
+# --- 7. ZONA PRINCIPAL ---
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot Oposiciones</h1>
@@ -297,11 +322,11 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Procesando..."): 
+                with st.spinner(f"🦖 Procesando con {CURRENT_MODEL_NAME}..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
-                    response_obj = generate_smart_response(prompt_final)
+                    response_obj = generate_response(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
                         st.error("🛑 Límite de velocidad alcanzado.")
@@ -309,6 +334,7 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
                         full_resp = "Error cuota."
                     elif isinstance(response_obj, str) and response_obj.startswith("Error_Gen"):
                          st.error(f"Error técnico: {response_obj}")
+                         st.warning("Prueba a recargar la página para que busque un modelo nuevo.")
                     else:
                         for chunk in response_obj:
                             if chunk.text:
