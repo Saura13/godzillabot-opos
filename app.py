@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # Cambiado a 'collapsed' para ganar espacio en móvil al entrar
 )
 
 DOCS_DIR = "documentos"
@@ -37,101 +37,100 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA GREEN" (OPTIMIZADO MÓVIL) ---
+# --- 3. DISEÑO VISUAL "GODZILLA MOBILE ULTRA" ---
 st.markdown("""
 <style>
-    /* Fuente y Fondo General */
+    /* --- ESTILOS BASE (PC) --- */
     .stApp {
         background-color: #f0fdf4;
-        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* ELEMENTOS DE NAVEGACIÓN */
+    /* Ocultar elementos molestos */
     #MainMenu, footer {visibility: hidden;}
     header {background-color: transparent !important;}
 
-    /* CABECERA GODZILLA (Escritorio) */
+    /* CABECERA */
     .header-container {
         background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
-        padding: 25px;
-        border-radius: 12px;
+        padding: 20px;
+        border-radius: 15px;
         color: white;
         text-align: center;
         margin-bottom: 20px;
-        box-shadow: 0 4px 15px rgba(21, 128, 61, 0.3);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         border-bottom: 4px solid #4ade80;
     }
-    .header-container h1 { font-size: 2.5rem; margin: 0; }
-    .header-container p { font-size: 1rem; opacity: 0.9; margin-top: 5px; }
-
+    .header-container h1 { margin: 0; color: white; }
+    
     /* BURBUJAS DE CHAT */
     div[data-testid="stChatMessage"] {
         padding: 1rem;
-        margin-bottom: 10px;
+        margin-bottom: 0.5rem;
+        background-color: white;
+        border-radius: 15px;
+        border: 1px solid #e5e7eb;
     }
-    /* Usuario */
     div[data-testid="stChatMessage"]:nth-child(odd) {
-        background-color: #14532d; 
-        color: white;
-        border-radius: 20px 20px 0 20px;
+        background-color: #14532d;
+        border: none;
     }
-    div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
-    
-    /* IA */
-    div[data-testid="stChatMessage"]:nth-child(even) {
-        background-color: #ffffff;
-        border: 1px solid #bbf7d0;
-        border-radius: 20px 20px 20px 0;
+    div[data-testid="stChatMessage"]:nth-child(odd) p {
+        color: white !important;
     }
-    
+
     /* BOTONES */
     div.stButton > button {
-        background: linear-gradient(45deg, #16a34a, #15803d);
+        background-color: #16a34a;
         color: white;
-        border-radius: 12px;
         border: none;
-        padding: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: bold;
         width: 100%;
-        border-bottom: 3px solid #14532d;
     }
 
-    /* UPLOADER */
-    div[data-testid="stFileUploader"] {
-        background-color: white;
-        border: 2px dashed #16a34a;
-        border-radius: 15px;
-        padding: 15px;
-    }
+    /* --- MODO MÓVIL AGRESIVO (Max Width 768px) --- */
+    @media only screen and (max-width: 768px) {
+        
+        /* 1. Ajustar el contenedor principal para que no tenga tanto espacio arriba */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
 
-    /* --- MODO MÓVIL (La Magia) --- */
-    @media only screen and (max-width: 600px) {
-        /* Reducir cabecera drásticamente */
+        /* 2. Cabecera más pequeña */
         .header-container {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
         }
         .header-container h1 {
-            font-size: 1.5rem; /* Título mucho más pequeño */
+            font-size: 1.5rem !important; /* Letra del título más pequeña */
         }
         .header-container p {
-            font-size: 0.8rem; /* Subtítulo pequeño */
-            display: none; /* Ocultar subtítulo si molesta */
+            display: none; /* Ocultar subtítulo en móvil */
         }
-        
-        /* Ajustar padding general de la app */
-        .block-container {
-            padding-top: 1rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-        }
-        
-        /* Botones más compactos */
+
+        /* 3. Botones más altos para dedos gordos */
         div.stButton > button {
-            padding: 10px;
-            font-size: 12px;
+            min-height: 50px; /* Botones más fáciles de tocar */
+            margin-bottom: 10px;
+            font-size: 16px !important;
+        }
+
+        /* 4. Chat más legible */
+        div[data-testid="stChatMessage"] {
+            padding: 0.8rem;
+        }
+        div[data-testid="stChatMessage"] p {
+            font-size: 16px !important; /* Letra del chat más grande */
+            line-height: 1.5;
+        }
+        
+        /* 5. Input de texto fijo abajo (ajustes visuales) */
+        div[data-testid="stChatInput"] {
+            padding-bottom: 20px;
         }
     }
 </style>
@@ -221,36 +220,33 @@ def get_system_prompt(mode):
 
 # --- 5. INTERFAZ LATERAL ---
 with st.sidebar:
-    # Icono de Godzilla/Dinosaurio
-    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=80) 
-    st.markdown("### 🦖 Guarida del Monstruo")
+    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=60) 
+    st.markdown("### 🦖 GodzillaBot")
     
-    with st.expander("📤 Alimentar con Temario"):
-        up = st.file_uploader("Arrastra tus PDFs", type="pdf")
+    with st.expander("📤 PDFs"):
+        up = st.file_uploader("Subir archivos", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
     
-    files = st.multiselect("📚 Archivos para devorar:", [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')])
+    files = st.multiselect("📚 Archivos:", [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')])
     
     st.markdown("---")
-    st.caption("ARMAS DE ESTUDIO")
-    mode = st.radio("Selecciona modo:", ["💀 Simulacro Test (Ruleta)", "💬 Chat Libre", "📝 Resumen Alto Rendimiento", "📊 Extracción Tabular (Excel)"])
+    mode = st.radio("Modo:", ["💀 Simulacro", "💬 Chat", "📝 Resumen", "📊 Excel"])
     
     st.markdown("---")
-    st.caption("MEMORIA")
     c1, c2 = st.columns(2)
-    if c1.button("💾 Guardar"): save_session_history()
-    if c2.button("🗑️ Rugir"): st.session_state.messages = []; st.rerun()
+    if c1.button("💾"): save_session_history()
+    if c2.button("🗑️"): st.session_state.messages = []; st.rerun()
     
     sessions = [f for f in os.listdir(HISTORY_DIR) if f.endswith('.json')]
     if sessions:
-        load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
-        if load != "..." and st.button("Abrir"): load_session_history(load)
+        load = st.selectbox("Historial:", ["..."] + sorted(sessions, reverse=True))
+        if load != "..." and st.button("Cargar"): load_session_history(load)
 
 # --- 6. ZONA PRINCIPAL ---
 st.markdown("""
 <div class="header-container">
-    <h1 style="margin:0; font-size: 2.5em;">🦖 GodzillaBot Oposiciones</h1>
-    <p style="margin:5px 0 0 0; opacity: 0.9; font-weight: 300;">Destruyendo tus dudas, dominando el temario.</p>
+    <h1>🦖 GodzillaBot</h1>
+    <p>Oposiciones</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -259,19 +255,19 @@ if "messages" not in st.session_state: st.session_state.messages = []
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
-if prompt := st.chat_input("Desafía a GodzillaBot..."):
+if prompt := st.chat_input("Escribe aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     if not files:
-        st.warning("⚠️ ¡GRRR! No tengo comida (PDFs). Carga documentos en el menú lateral.")
+        st.warning("⚠️ Carga PDFs en el menú (arriba izquierda).")
     else:
         with st.chat_message("assistant"):
             placeholder = st.empty()
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Procesando destrucción masiva de datos..."): 
+                with st.spinner("🦖 Pensando..."): 
                     text = extract_text_from_pdfs(files)
                 
                 prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
@@ -291,10 +287,10 @@ if prompt := st.chat_input("Desafía a GodzillaBot..."):
                 with col1:
                     if WORD_AVAILABLE:
                         docx = create_word_docx(full_resp)
-                        st.download_button("📄 Descargar Word", docx, f"Godzilla_{datetime.now().strftime('%H%M')}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                        st.download_button("📄 Word", docx, f"Godzilla_{datetime.now().strftime('%H%M')}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 
                 with col2:
                     if "Tabular" in mode or "|" in full_resp:
-                        st.download_button("📊 Exportar Excel", full_resp, "datos.csv", "text/csv")
+                        st.download_button("📊 Excel", full_resp, "datos.csv", "text/csv")
 
-            except Exception as e: st.error(f"Error técnico: {e}")
+            except Exception as e: st.error(f"Error: {e}")
