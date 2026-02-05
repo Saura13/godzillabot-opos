@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="collapsed"  # Cambiado a 'collapsed' para ganar espacio en móvil al entrar
+    initial_sidebar_state="collapsed"
 )
 
 DOCS_DIR = "documentos"
@@ -37,101 +37,132 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA MOBILE ULTRA" ---
+# --- 3. DISEÑO VISUAL "HÍBRIDO: POTENCIA PC + COMODIDAD MÓVIL" ---
 st.markdown("""
 <style>
-    /* --- ESTILOS BASE (PC) --- */
+    /* --- ESTILOS BASE (Comunes) --- */
     .stApp {
         background-color: #f0fdf4;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    
-    /* Ocultar elementos molestos */
     #MainMenu, footer {visibility: hidden;}
     header {background-color: transparent !important;}
 
-    /* CABECERA */
-    .header-container {
-        background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
-        padding: 20px;
-        border-radius: 15px;
-        color: white;
-        text-align: center;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        border-bottom: 4px solid #4ade80;
-    }
-    .header-container h1 { margin: 0; color: white; }
-    
-    /* BURBUJAS DE CHAT */
-    div[data-testid="stChatMessage"] {
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-        background-color: white;
-        border-radius: 15px;
-        border: 1px solid #e5e7eb;
-    }
-    div[data-testid="stChatMessage"]:nth-child(odd) {
-        background-color: #14532d;
-        border: none;
-    }
-    div[data-testid="stChatMessage"]:nth-child(odd) p {
-        color: white !important;
+    /* --- ESTILOS DE PC (IMPACTO VISUAL) --- */
+    @media only screen and (min-width: 769px) {
+        
+        /* Cabecera Épica */
+        .header-container {
+            background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4); /* Sombra potente */
+            border-bottom: 5px solid #4ade80; /* Neón */
+        }
+        .header-container h1 { font-size: 3rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; letter-spacing: 1px; }
+
+        /* Botones con Efecto 3D y Degradados */
+        div.stButton > button {
+            background: linear-gradient(45deg, #16a34a, #15803d);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 4px solid #14532d; /* El borde que da efecto 3D */
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        div.stButton > button:hover {
+            transform: translateY(2px); /* Se hunde un poco al pasar el ratón */
+            border-bottom: 2px solid #14532d;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(45deg, #22c55e, #16a34a); /* Brilla más */
+        }
+        
+        div.stButton > button:active {
+            transform: translateY(4px); /* Se hunde del todo al clicar */
+            border-bottom: 0px solid transparent;
+        }
+
+        /* Burbujas de chat elegantes */
+        div[data-testid="stChatMessage"] {
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
     }
 
-    /* BOTONES */
-    div.stButton > button {
-        background-color: #16a34a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-        width: 100%;
-    }
-
-    /* --- MODO MÓVIL AGRESIVO (Max Width 768px) --- */
+    /* --- ESTILOS MÓVIL (COMODIDAD TÁCTIL) --- */
     @media only screen and (max-width: 768px) {
         
-        /* 1. Ajustar el contenedor principal para que no tenga tanto espacio arriba */
         .block-container {
             padding-top: 2rem !important;
             padding-left: 1rem !important;
             padding-right: 1rem !important;
         }
 
-        /* 2. Cabecera más pequeña */
+        /* Cabecera Compacta */
         .header-container {
+            background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
             padding: 15px;
-            margin-bottom: 10px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #4ade80;
         }
-        .header-container h1 {
-            font-size: 1.5rem !important; /* Letra del título más pequeña */
-        }
-        .header-container p {
-            display: none; /* Ocultar subtítulo en móvil */
-        }
+        .header-container h1 { font-size: 1.5rem !important; margin: 0; }
+        .header-container p { display: none; }
 
-        /* 3. Botones más altos para dedos gordos */
+        /* Botones Planos y Grandes (Touch Friendly) */
         div.stButton > button {
-            min-height: 50px; /* Botones más fáciles de tocar */
-            margin-bottom: 10px;
-            font-size: 16px !important;
-        }
-
-        /* 4. Chat más legible */
-        div[data-testid="stChatMessage"] {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
             padding: 0.8rem;
-        }
-        div[data-testid="stChatMessage"] p {
-            font-size: 16px !important; /* Letra del chat más grande */
-            line-height: 1.5;
+            font-weight: bold;
+            width: 100%;
+            min-height: 50px; /* Altura mínima para el dedo */
+            margin-bottom: 8px;
+            box-shadow: none; /* Quitamos sombras complejas en móvil */
         }
         
-        /* 5. Input de texto fijo abajo (ajustes visuales) */
-        div[data-testid="stChatInput"] {
-            padding-bottom: 20px;
+        div.stButton > button:active {
+            background-color: #14532d; /* Oscuro al tocar */
         }
+
+        /* Chat Legible */
+        div[data-testid="stChatMessage"] {
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
+        }
+        div[data-testid="stChatMessage"] p {
+            font-size: 16px !important;
+            line-height: 1.4;
+        }
+    }
+    
+    /* COLORES DE CHAT (COMUNES) */
+    div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
+    div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
+    div[data-testid="stChatMessage"]:nth-child(even) { background-color: #ffffff; border: 1px solid #bbf7d0; }
+
+    /* UPLOADER */
+    div[data-testid="stFileUploader"] {
+        background-color: white;
+        border: 2px dashed #16a34a;
+        border-radius: 10px;
+        padding: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -150,7 +181,7 @@ def save_session_history():
     path = os.path.join(HISTORY_DIR, f"Sesion_{timestamp}.json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(st.session_state.messages, f, ensure_ascii=False, indent=4)
-    st.success(f"✅")
+    st.success(f"✅ Guardado")
 
 def load_session_history(filename):
     path = os.path.join(HISTORY_DIR, filename)
@@ -234,8 +265,8 @@ with st.sidebar:
     
     st.markdown("---")
     c1, c2 = st.columns(2)
-    if c1.button("💾"): save_session_history()
-    if c2.button("🗑️"): st.session_state.messages = []; st.rerun()
+    if c1.button("💾 Guardar"): save_session_history()
+    if c2.button("🗑️ Borrar"): st.session_state.messages = []; st.rerun()
     
     sessions = [f for f in os.listdir(HISTORY_DIR) if f.endswith('.json')]
     if sessions:
@@ -246,7 +277,7 @@ with st.sidebar:
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot</h1>
-    <p>Oposiciones</p>
+    <p>Oposiciones - Versión Híbrida</p>
 </div>
 """, unsafe_allow_html=True)
 
