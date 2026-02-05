@@ -37,7 +37,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA V5 - RESPONSIVE TOTAL" ---
+# --- 3. DISEÑO VISUAL "GODZILLA V6 - TABLAS INTELIGENTES" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE (Comunes) --- */
@@ -48,23 +48,33 @@ st.markdown("""
     #MainMenu, footer {visibility: hidden;}
     header {background-color: transparent !important;}
 
-    /* --- SOLUCIÓN PARA TABLAS EN MÓVIL (Scroll Horizontal) --- */
+    /* --- SOLUCIÓN TABLAS V6: Texto envuelto y scroll equilibrado --- */
     div[data-testid="stMarkdownContainer"] table {
         display: block;
-        overflow-x: auto;
-        white-space: nowrap; /* Mantiene celdas en una linea para forzar scroll si es necesario */
-        border-collapse: collapse;
+        overflow-x: auto; /* Scroll solo si hace falta */
         width: 100%;
+        border-collapse: collapse;
         border: 1px solid #bbf7d0;
     }
+    
     div[data-testid="stMarkdownContainer"] th {
         background-color: #14532d;
         color: white;
-        padding: 10px;
+        padding: 12px;
+        text-align: left;
+        white-space: normal !important; /* Permite saltos de línea en títulos */
+        min-width: 100px; /* Ancho mínimo para títulos */
     }
+    
     div[data-testid="stMarkdownContainer"] td {
-        padding: 8px;
+        padding: 10px;
         border-bottom: 1px solid #eee;
+        vertical-align: top; /* Texto alineado arriba */
+        white-space: normal !important; /* ¡CLAVE! Permite que el texto baje de línea */
+        word-wrap: break-word; /* Rompe palabras larguísimas si es necesario */
+        min-width: 120px; /* Cada columna tendrá al menos este ancho */
+        max-width: 300px; /* Pero no será más ancha que esto, forzando salto de línea */
+        line-height: 1.5; /* Espaciado cómodo para leer */
     }
 
     /* --- ESTILOS DE PC (IMPACTO VISUAL) --- */
@@ -135,7 +145,7 @@ st.markdown("""
         
         .block-container {
             padding-top: 2rem !important;
-            padding-left: 0.5rem !important; /* Ganamos espacio lateral */
+            padding-left: 0.5rem !important; 
             padding-right: 0.5rem !important;
         }
 
@@ -171,7 +181,6 @@ st.markdown("""
     }
 
     /* --- MODO HORIZONTAL (LANDSCAPE) MÓVIL --- */
-    /* Cuando giras el móvil, ocultamos casi todo para dejar espacio */
     @media only screen and (orientation: landscape) and (max-height: 500px) {
         .header-container {
             padding: 5px !important;
@@ -183,7 +192,7 @@ st.markdown("""
         .header-container h1 { font-size: 1rem !important; }
         .header-container p { display: none; }
         .block-container { padding-top: 0.5rem !important; }
-        div[data-testid="stSidebar"] { width: 100px !important; } /* Sidebar más fina si se abre */
+        div[data-testid="stSidebar"] { width: 100px !important; } 
     }
     
     /* COLORES DE CHAT */
