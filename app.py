@@ -38,22 +38,19 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO) ---
+# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO V12 - MANTENIDO) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA DE ENTORNO (Adiós Publicidad) === */
-    /* Hacemos transparente la barra superior, NO invisible (para que el botón funcione) */
     [data-testid="stHeader"] {
         background-color: transparent !important;
         z-index: 90 !important;
     }
-    /* Ocultamos específicamente los botones de la derecha (Fork, Menu, Deploy) */
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
     /* === 2. BOTÓN DEL MENÚ (SIDEBAR TRIGGER) === */
-    /* Lo diseñamos como una burbuja flotante visible y TÁCTIL */
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
@@ -64,7 +61,6 @@ st.markdown("""
         height: 45px !important;
         padding: 5px !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-        /* Posición fija para que siempre esté ahí */
         z-index: 100 !important; 
     }
     [data-testid="stSidebarCollapsedControl"]:hover {
@@ -88,7 +84,7 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
         border-bottom: 5px solid #4ade80;
-        margin-top: 10px; /* Margen para no chocar con el botón */
+        margin-top: 10px;
     }
     .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
     .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
@@ -106,12 +102,10 @@ st.markdown("""
 
     /* === 4. AJUSTES ESPECÍFICOS PARA PC === */
     @media only screen and (min-width: 769px) {
-        /* Sidebar Premium */
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
             border-right: 2px solid #4ade80;
         }
-        /* Tarjetas del Menú */
         div[role="radiogroup"] > label {
             background-color: white; padding: 12px; border-radius: 8px; margin-bottom: 8px;
             border: 1px solid #bbf7d0; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
@@ -119,7 +113,6 @@ st.markdown("""
         div[role="radiogroup"] > label:hover {
             transform: translateX(5px); border-color: #16a34a; background-color: #f0fdf4; cursor: pointer;
         }
-        /* Botones 3D */
         div.stButton > button {
             background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 10px;
             padding: 12px; border-bottom: 4px solid #14532d; font-weight: bold; text-transform: uppercase;
@@ -130,66 +123,65 @@ st.markdown("""
     /* === 5. AJUSTES ESPECÍFICOS PARA MÓVIL === */
     @media only screen and (max-width: 768px) {
         .block-container {
-            /* Espacio arriba para que el botón no tape el título */
             padding-top: 4.5rem !important; 
             padding-left: 0.8rem !important; padding-right: 0.8rem !important;
         }
-        
-        /* Cabecera Móvil (Vertical) */
         .header-container { padding: 20px; margin-bottom: 20px; }
         .header-container h1 { font-size: 1.8rem !important; }
-        .header-container p { font-size: 0.9rem !important; display: block; } /* Subtítulo visible */
+        .header-container p { font-size: 0.9rem !important; display: block; }
 
-        /* Botones Táctiles */
         div.stButton > button {
             background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 8px;
             padding: 0.8rem; width: 100%; min-height: 50px; font-weight: bold;
         }
     }
 
-    /* === 6. MODO HORIZONTAL (LANDSCAPE) - EL ENCOGEDOR === */
-    /* Cuando giras el móvil, todo se hace pequeño para dejarte trabajar */
+    /* === 6. MODO HORIZONTAL (LANDSCAPE) === */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 1rem !important; }
-        
         .header-container {
             padding: 5px !important; margin-bottom: 10px !important;
-            display: flex; align-items: center; justify-content: center;
-            min-height: 40px;
+            display: flex; align-items: center; justify-content: center; min-height: 40px;
         }
         .header-container h1 { font-size: 1.2rem !important; margin: 0; }
-        .header-container p { display: none !important; } /* Ocultamos subtítulo */
-        
-        /* Botón Sidebar más pequeño en horizontal */
+        .header-container p { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] {
             width: 35px !important; height: 35px !important; top: 5px !important; left: 5px !important;
         }
     }
-
-    /* Chat Colors */
+    
     div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
     div[data-testid="stChatMessage"]:nth-child(even) { background-color: white; border: 1px solid #bbf7d0; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. LÓGICA INTELIGENTE (DOBLE MOTOR) ---
+# --- 4. LÓGICA TODOTERRENO (SOLUCIÓN ERROR 404) ---
 def generate_smart_response(prompt_text):
-    try:
-        # 1. Intento Rápido (Flash)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        return model.generate_content(prompt_text, stream=True)
-    except Exception as e:
-        if "429" in str(e) or "quota" in str(e).lower():
-            try:
-                # 2. Intento Robusto (Pro) - Pausa de 1s para respirar
-                time.sleep(1)
-                model_backup = genai.GenerativeModel('gemini-1.5-pro') 
-                return model_backup.generate_content(prompt_text, stream=True)
-            except Exception as e2:
-                return f"Error_Quota: {str(e2)}"
-        else:
-            return f"Error_Gen: {str(e)}"
+    # Lista de prioridades: 
+    # 1. Flash (Rápido y Moderno)
+    # 2. Pro (Más potente, respaldo)
+    # 3. Gemini-Pro (El clásico que nunca falla por antigüedad)
+    
+    models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    
+    last_error = ""
+
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            # Intentamos generar respuesta con el modelo actual
+            return model.generate_content(prompt_text, stream=True)
+        except Exception as e:
+            # Si falla, guardamos el error y probamos el siguiente modelo del bucle
+            last_error = str(e)
+            continue
+    
+    # Si llegamos aquí, han fallado los 3 modelos. Analizamos el último error.
+    if "429" in last_error or "quota" in last_error.lower():
+        return f"Error_Quota: {last_error}"
+    else:
+        return f"Error_Gen: {last_error}"
 
 def save_uploaded_file(uploaded_file):
     try:
@@ -253,7 +245,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 5. MENÚ LATERAL (DESCRIPTIVO Y FUNCIONAL) ---
+# --- 5. MENÚ LATERAL ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -271,7 +263,6 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 🎯 Objetivo de Hoy")
-    # NOMBRES LARGOS RESTAURADOS
     mode = st.radio(
         "Selecciona estrategia:", 
         [
