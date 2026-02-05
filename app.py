@@ -39,7 +39,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. CEREBRO: CADENA DE MODELOS Y PACIENCIA ---
+# --- 3. LÓGICA DE PACIENCIA (REINTENTOS) ---
 @st.cache_resource
 def get_model_list():
     try:
@@ -74,44 +74,66 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 4. DISEÑO VISUAL "MODO LECTURA LIMPIA" (Blanco y Negro) ---
+# --- 4. DISEÑO VISUAL "MODO PAPEL OFICIAL" (CSS V17) ---
 st.markdown("""
 <style>
-    /* === 1. LIMPIEZA INTERFAZ === */
+    /* === 1. LIMPIEZA TOTAL === */
     [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. FONDO Y TEXTO (CAMBIO IMPORTANTE) === */
-    /* Fondo blanco puro para leer sin cansarse */
-    .stApp { 
+    /* === 2. FONDO BLANCO PURO (ADIÓS VERDE) === */
+    .stApp, [data-testid="stAppViewContainer"] { 
         background-color: #ffffff !important; 
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     
-    /* === 3. BURBUJAS DE CHAT === */
-    /* Usuario: Verde Godzilla (para diferenciar) */
+    /* === 3. BURBUJAS DE CHAT (LEIBILIDAD MÁXIMA) === */
+    /* Usuario: Mantenemos verde elegante */
     div[data-testid="stChatMessage"]:nth-child(odd) { 
         background-color: #15803d; 
         color: white;
         border: none;
+        border-radius: 15px;
     }
-    div[data-testid="stChatMessage"]:nth-child(odd) * { 
+    div[data-testid="stChatMessage"]:nth-child(odd) p { 
         color: white !important; 
     }
     
-    /* IA: Gris muy suave, casi blanco, con texto negro nítido */
+    /* IA: BLANCO con Borde Gris (Tipo Documento) */
     div[data-testid="stChatMessage"]:nth-child(even) { 
-        background-color: #f9fafb; /* Gris humo muy claro */
-        border: 1px solid #e5e7eb;
-        color: #1f2937; /* Gris muy oscuro (casi negro) para lectura fácil */
+        background-color: #ffffff !important; 
+        border: 1px solid #d1d5db !important; /* Borde gris definido */
+        border-radius: 5px !important; /* Bordes más cuadrados tipo folio */
+        color: #000000 !important; /* Texto negro puro */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sutil sombra */
     }
-    div[data-testid="stChatMessage"]:nth-child(even) * { 
-        color: #1f2937 !important;
+    div[data-testid="stChatMessage"]:nth-child(even) p, 
+    div[data-testid="stChatMessage"]:nth-child(even) li,
+    div[data-testid="stChatMessage"]:nth-child(even) td { 
+        color: #000000 !important;
     }
 
-    /* === 4. BOTÓN MENÚ === */
+    /* === 4. TABLAS CERRADAS (TIPO EXCEL) === */
+    div[data-testid="stMarkdownContainer"] table {
+        width: 100%;
+        border-collapse: collapse !important;
+        border: 2px solid #374151 !important; /* Borde exterior grueso */
+    }
+    div[data-testid="stMarkdownContainer"] th {
+        background-color: #f3f4f6 !important; /* Cabecera gris */
+        color: #000000 !important;
+        border: 1px solid #9ca3af !important; /* Bordes internos visibles */
+        padding: 10px;
+    }
+    div[data-testid="stMarkdownContainer"] td {
+        border: 1px solid #9ca3af !important; /* Bordes internos visibles y cerrados */
+        padding: 10px;
+        color: #000000;
+    }
+
+    /* === 5. BOTÓN MENÚ FLOTANTE === */
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
@@ -121,61 +143,32 @@ st.markdown("""
         width: 45px !important;
         height: 45px !important;
         padding: 5px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
         z-index: 999999 !important; 
         position: fixed; top: 15px; left: 15px;
     }
 
-    /* === 5. CABECERA (SOLO VISUAL) === */
+    /* === 6. CABECERA === */
     .header-container {
-        background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
-        padding: 30px;
-        border-radius: 15px;
+        background: linear-gradient(90deg, #166534 0%, #15803d 100%);
+        padding: 25px;
+        border-radius: 8px;
         color: white;
         text-align: center;
         margin-bottom: 30px;
-        /* Quitamos el verde neón de abajo que cansaba */
-        border-bottom: 5px solid #166534; 
         margin-top: 50px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .header-container h1 { font-size: 2.5rem; margin: 0; font-weight: 800;}
-    .header-container p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
+    .header-container h1 { font-size: 2.2rem; margin: 0; font-weight: 700;}
 
-    /* === 6. TABLAS (Scroll) === */
-    div[data-testid="stMarkdownContainer"] table {
-        display: block; overflow-x: auto; width: 100%; border-collapse: collapse; 
-        border: 1px solid #e5e7eb; /* Borde gris suave */
-    }
-    div[data-testid="stMarkdownContainer"] th {
-        background-color: #f3f4f6; /* Cabecera gris claro */
-        color: #111827; /* Texto negro */
-        padding: 12px; min-width: 100px; text-align: left; border-bottom: 2px solid #d1d5db;
-    }
-    div[data-testid="stMarkdownContainer"] td {
-        padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
-    }
-
-    /* Media Queries (Móvil) */
+    /* Media Queries */
     @media only screen and (max-width: 768px) {
-        .block-container { padding-top: 4rem !important; padding-left: 1rem; padding-right: 1rem; }
-        .header-container { padding: 20px; margin-bottom: 20px; margin-top: 40px; }
-        .header-container h1 { font-size: 1.8rem !important; }
-        div.stButton > button { width: 100%; min-height: 50px; }
+        .block-container { padding-top: 4rem !important; }
+        .header-container { padding: 15px; margin-top: 40px; }
+        .header-container h1 { font-size: 1.5rem !important; }
     }
-    /* Media Queries (PC) */
     @media only screen and (min-width: 769px) {
-        section[data-testid="stSidebar"] {
-            background-color: #f9fafb; border-right: 1px solid #e5e7eb;
-        }
-        div.stButton > button { width: auto; min-width: 200px; }
-    }
-    
-    /* Landscape */
-    @media only screen and (orientation: landscape) and (max-height: 600px) {
-        .block-container { padding-top: 1rem !important; }
-        .header-container { padding: 5px !important; margin-top: 0px; min-height: 40px; display: flex; align-items: center; justify-content: center;}
-        .header-container h1 { font-size: 1.2rem !important; margin: 0; }
-        .header-container p { display: none !important; }
+        section[data-testid="stSidebar"] { background-color: #f9fafb; border-right: 1px solid #e5e7eb; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -234,37 +227,38 @@ def extract_text_from_pdfs(file_list):
         except: pass
     return text
 
-# --- 6. CEREBRO: RULETA DE EXAMINADORES (RECUPERADA) ---
+# --- 6. CEREBRO: RULETA + FORMATO VERTICAL ---
 def get_system_prompt(mode):
-    base = "Eres GodzillaBot, experto en legislación y oposiciones. Usas los PDFs adjuntos como fuente de verdad absoluta. "
+    base = "Eres GodzillaBot, experto en legislación. Fuente: PDFs adjuntos. "
     
     if "Simulacro" in mode:
-        # RULETA DE PERSONALIDADES ALEATORIA
         personalidades = [
-            "EL MINUCIOSO: Te centras en plazos, porcentajes y excepciones raras.",
-            "EL CONCEPTUAL: Preguntas sobre la naturaleza jurídica y definiciones exactas.",
-            "EL TRAMPOSO: Buscas confundir con términos muy similares y juegos de palabras.",
-            "EL PRÁCTICO: Planteas casos prácticos breves aplicados a la realidad administrativa."
+            "EL MINUCIOSO (Detalles y plazos)",
+            "EL CONCEPTUAL (Definiciones)",
+            "EL TRAMPOSO (Juegos de palabras)",
+            "EL PRÁCTICO (Casos reales)"
         ]
         examinador = random.choice(personalidades)
         
+        # INSTRUCCIÓN CLAVE PARA SEPARAR LÍNEAS: "Usa una lista Markdown"
         return base + f"""
-        MODO: SIMULACRO DE EXAMEN (TEST).
-        PERSONALIDAD ACTIVA: {examinador}
+        MODO: SIMULACRO TEST. Personalidad: {examinador}.
         
-        INSTRUCCIONES ESTRICTAS:
-        1. Genera preguntas tipo test con EXACTAMENTE 4 opciones (a, b, c, d).
-        2. Solo UNA es correcta.
-        3. Al final del todo, proporciona la 'HOJA DE RESPUESTAS' con la solución y el artículo de referencia.
-        4. No des explicaciones entre preguntas, solo el test puro.
+        INSTRUCCIONES DE FORMATO OBLIGATORIAS:
+        1. Las opciones de respuesta (a, b, c, d) deben estar en LÍNEAS SEPARADAS.
+        2. Usa formato de lista Markdown. Ejemplo:
+           * a) Opción 1
+           * b) Opción 2...
+        3. NO las pongas seguidas en la misma línea.
+        4. Hoja de Respuestas al final.
         """
         
     elif "Excel" in mode:
-        return base + "Salida: Tabla compatible con Excel (separador |). Concepto | Dato | Art | Nota."
+        return base + "Salida: Tabla Markdown cerrada. Concepto | Dato | Art | Nota."
     else:
-        return base + "Responde de forma técnica, estructurada y profesional."
+        return base + "Responde de forma técnica y estructurada."
 
-# --- 7. INTERFAZ Y LÓGICA ---
+# --- 7. INTERFAZ ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -326,15 +320,14 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Procesando (Negociando cuota con Google)..."): 
+                with st.spinner("🦖 Procesando (Paciencia activada)..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
                     response_obj = generate_response_with_patience(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 Agotado total. Google me pide descansar unos minutos.")
-                        st.caption("Consejo: Espera 2-3 min para recargar energía.")
+                        st.error("🛑 Agotado. Espera un poco.")
                         full_resp = "Error cuota."
                     else:
                         for chunk in response_obj:
