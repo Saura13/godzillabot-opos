@@ -38,7 +38,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA V8 - VISIBLE & ROBUST" ---
+# --- 3. DISEÑO VISUAL "GODZILLA V9 - CLEAN & STEALTH" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE --- */
@@ -46,24 +46,34 @@ st.markdown("""
         background-color: #f0fdf4;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    #MainMenu, footer {visibility: hidden;}
-    header {background-color: transparent !important;}
-
-    /* --- ¡SOLUCIÓN BOTÓN INVISIBLE! --- */
-    /* Esto fuerza al botón del menú a ser un círculo blanco con icono verde */
-    button[kind="header"] {
-        background-color: white !important;
-        border: 2px solid #16a34a !important; /* Borde verde */
-        color: #16a34a !important; /* Icono verde */
-        border-radius: 50% !important;
-        width: 3rem !important;
-        height: 3rem !important;
+    
+    /* --- LIMPIEZA TOTAL DE INTERFAZ (Adiós botones intrusos) --- */
+    #MainMenu {visibility: hidden;} /* Oculta los 3 puntos */
+    footer {visibility: hidden;} /* Oculta 'Made with Streamlit' */
+    header {visibility: hidden;} /* Oculta la barra superior decorativa */
+    
+    /* Ocultar específicamente los botones de Deploy/Fork/GitHub */
+    .stDeployButton {display: none;}
+    [data-testid="stToolbar"] {display: none;}
+    [data-testid="stHeader"] {background: transparent;}
+    
+    /* --- RECUPERACIÓN DEL BOTÓN DE MENÚ (LA FLECHA) --- */
+    /* Hacemos visible SOLO el botón de colapsar/desplegar, aunque el header esté oculto */
+    [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+        color: #15803d !important; /* Verde Godzilla Oscuro */
+        background-color: transparent !important;
+        font-weight: bold;
+        transform: scale(1.2); /* Un poco más grande para el dedo */
+        margin-top: 10px; /* Ajuste de posición */
+        margin-left: 10px;
         z-index: 999999;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
-    /* Aseguramos que el icono SVG dentro del botón sea verde */
-    button[kind="header"] svg {
-        fill: #16a34a !important;
+    
+    /* Efecto al pasar el ratón/dedo por la flecha */
+    [data-testid="stSidebarCollapsedControl"]:hover {
+        color: #16a34a !important; /* Verde más brillante al tocar */
+        background-color: rgba(22, 163, 74, 0.1) !important;
     }
 
     /* --- SOLUCIÓN TABLAS (Scroll) --- */
@@ -124,7 +134,7 @@ st.markdown("""
     /* --- MÓVIL --- */
     @media only screen and (max-width: 768px) {
         .block-container {
-            padding-top: 4rem !important; /* Espacio extra para el botón flotante */
+            padding-top: 3rem !important;
             padding-left: 0.5rem !important; 
             padding-right: 0.5rem !important;
         }
@@ -147,6 +157,12 @@ st.markdown("""
             width: 100%;
             min-height: 50px;
         }
+        
+        /* Ajuste fino para la flecha en móvil */
+        [data-testid="stSidebarCollapsedControl"] {
+            margin-top: 5px; 
+            margin-left: 5px;
+        }
     }
     
     /* CHAT COLORS */
@@ -156,25 +172,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. FUNCIONES LÓGICAS AVANZADAS ---
-
-# Función inteligente para gestionar errores 429 (Límites de cuota)
+# --- 4. FUNCIONES LÓGICAS (DOBLE MOTOR) ---
 def generate_smart_response(prompt_text):
-    # Intentar con el modelo rápido y moderno (Flash)
     try:
+        # Intento 1: Modelo Flash (Rápido)
         model = genai.GenerativeModel('gemini-1.5-flash')
         return model.generate_content(prompt_text, stream=True)
     except Exception as e:
         if "429" in str(e) or "quota" in str(e).lower():
-            # Si falla por cuota, intentamos con el modelo "viejo" pero fiable (Pro)
             try:
-                # Pequeña pausa para respirar
-                time.sleep(1) 
-                # Fallback al modelo Pro 1.0 o Pro 1.5 si tienes acceso, usamos una variante estable
-                model_backup = genai.GenerativeModel('gemini-pro') 
+                # Intento 2: Modelo Pro (Respaldo si hay error de cuota)
+                time.sleep(1)
+                model_backup = genai.GenerativeModel('gemini-1.5-pro') 
                 return model_backup.generate_content(prompt_text, stream=True)
             except Exception as e2:
-                # Si ambos fallan, devolvemos error controlado
                 return f"Error_Quota: {str(e2)}"
         else:
             return f"Error_Gen: {str(e)}"
@@ -246,13 +257,13 @@ with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
     
-    with st.expander("📤 Cargar Temario (PDFs)", expanded=True):
+    # CORRECCIÓN: 'expanded=False' para que empiece cerrado
+    with st.expander("📤 Cargar Temario (PDFs)", expanded=False):
         up = st.file_uploader("Arrastra archivos aquí", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
     
     files_available = [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')]
     if files_available:
-        # Por defecto NO selecciona nada para evitar sobrecarga
         files = st.multiselect("📚 Documentos Activos:", files_available, default=[]) 
     else:
         files = []
@@ -299,18 +310,15 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
-                    # Usamos la nueva función inteligente con fallback
                     response_obj = generate_smart_response(prompt_final)
 
-                    # Verificamos si es una respuesta válida o un error
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 **¡Godzilla necesita descansar!** Has superado el límite de velocidad gratuito de Google.")
-                        st.info("⏳ Espera 1 minuto y vuelve a intentarlo. (Consejo: Usa la versión web para cargas muy pesadas).")
-                        full_resp = "Error de cuota."
+                        st.error("🛑 Límite de velocidad alcanzado.")
+                        st.info("⏳ Espera 1 minuto. Godzilla está recuperando aliento.")
+                        full_resp = "Error cuota."
                     elif isinstance(response_obj, str) and response_obj.startswith("Error_Gen"):
                          st.error(f"Error técnico: {response_obj}")
                     else:
-                        # Si es un stream válido
                         for chunk in response_obj:
                             if chunk.text:
                                 full_resp += chunk.text
