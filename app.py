@@ -38,67 +38,61 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. CEREBRO INTELIGENTE: SISTEMA DE RELEVOS (NUEVO) ---
+# --- 3. CEREBRO INTELIGENTE: SISTEMA DE PACIENCIA (BACKOFF) ---
 @st.cache_resource
-def get_model_chain():
-    """
-    Crea una cadena de mando de modelos. Si el general cae, el teniente toma el mando.
-    Orden: Flash (Rápido) -> Pro (Potente) -> Legacy (Vieja Guardia)
-    """
+def get_model_list():
+    """Obtiene los modelos disponibles una sola vez al arrancar"""
     try:
-        # 1. Obtenemos la lista real de lo que Google nos ofrece hoy
         all_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        chain = []
+        # Prioridad: Flash (Rápido) -> Pro (Potente) -> Legacy
+        priorities = []
+        for m in all_models:
+            if 'flash' in m.lower(): priorities.append(m)
+        for m in all_models:
+            if 'pro' in m.lower() and 'vision' not in m.lower(): priorities.append(m)
         
-        # 2. Reclutamos al mejor Flash (Velocidad)
-        flash = [m for m in all_models if 'flash' in m.lower()]
-        if flash: chain.append(flash[0]) # El más moderno suele salir primero
-        
-        # 3. Reclutamos al mejor Pro (Potencia)
-        pro = [m for m in all_models if 'pro' in m.lower() and 'vision' not in m.lower()]
-        if pro: chain.append(pro[0])
-        
-        # 4. Reclutamos al Veterano (Gemini-Pro 1.0) por seguridad
-        if 'models/gemini-pro' in all_models and 'models/gemini-pro' not in chain:
-            chain.append('models/gemini-pro')
-            
-        # Si la lista está vacía (raro), ponemos los nombres estándar por defecto
-        if not chain: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-        
-        return chain
+        # Si no encuentra nada, usa los nombres estándar por defecto
+        if not priorities: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        return priorities
     except:
         return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
 
-# Inicializamos la cadena de mando
-MODEL_CHAIN = get_model_chain()
+MODELS_AVAILABLE = get_model_list()
 
-def generate_response_with_relay(prompt_text):
+def generate_response_with_patience(prompt_text):
     """
-    Intenta generar respuesta iterando por la cadena de modelos.
-    Si uno falla por cuota (429), salta al siguiente.
+    Intenta generar respuesta con 'Paciencia Automática'.
+    Si falla por cuota (429), ESPERA y reintenta en lugar de rendirse.
     """
-    last_error = ""
+    max_retries = 3  # Número de veces que insistirá
     
-    for model_name in MODEL_CHAIN:
-        try:
-            # Si estamos reintentando (ya falló uno antes), esperamos 1 seg para dar aire
-            if last_error: time.sleep(1)
+    for attempt in range(max_retries):
+        # Probamos cada modelo disponible en la lista
+        for model_name in MODELS_AVAILABLE:
+            try:
+                model = genai.GenerativeModel(model_name)
+                # Si funciona, devolvemos la respuesta inmediatamente (STREAM)
+                return model.generate_content(prompt_text, stream=True)
             
-            model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt_text, stream=True)
-            
-        except Exception as e:
-            last_error = str(e)
-            # Si el error es de Cuota (429) o Modelo no encontrado (404), CONTINUAMOS
-            if "429" in last_error or "quota" in last_error.lower() or "404" in last_error:
-                continue 
-            # Si es otro tipo de error grave, también probamos suerte con el siguiente
-            continue
+            except Exception as e:
+                error_msg = str(e)
+                # Si el error es de CUOTA (429), aplicamos PAUSA
+                if "429" in error_msg or "quota" in error_msg.lower():
+                    wait_time = (attempt + 1) * 5  # Espera 5s, luego 10s, luego 15s...
+                    time.sleep(wait_time)
+                    continue # Vuelve a intentar con el siguiente modelo o reintento
+                
+                # Si es error 404 (Modelo no existe), pasamos al siguiente modelo rápido
+                if "404" in error_msg:
+                    continue
+                
+                # Si es otro error, lo guardamos y seguimos
+                continue
+    
+    # Si tras todos los intentos y esperas sigue fallando:
+    return "Error_Quota_Final"
 
-    # Si llegamos aquí, es que han caído todos los soldados
-    return f"Error_Quota: {last_error}"
-
-# --- 4. ARQUITECTURA VISUAL (V13 - CONSERVADA) ---
+# --- 4. ARQUITECTURA VISUAL (CSS V14 - SIN CAMBIOS) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA === */
@@ -107,7 +101,7 @@ st.markdown("""
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. BOTÓN MENÚ (SIDEBAR) - BURBUJA FLOTANTE === */
+    /* === 2. BOTÓN MENÚ (SIDEBAR) === */
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
@@ -118,16 +112,12 @@ st.markdown("""
         height: 45px !important;
         padding: 5px !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-        z-index: 100 !important; 
+        z-index: 999999 !important; 
         position: fixed;
         top: 15px;
         left: 15px;
     }
-    [data-testid="stSidebarCollapsedControl"]:hover {
-        transform: scale(1.1);
-        background-color: #f0fdf4 !important;
-    }
-
+    
     /* === 3. ESTÉTICA === */
     .stApp { background-color: #f0fdf4; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
@@ -140,12 +130,11 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
         border-bottom: 5px solid #4ade80;
-        margin-top: 50px; /* Margen extra para no chocar con el botón flotante */
+        margin-top: 50px;
     }
     .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
     .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
 
-    /* Tablas */
     div[data-testid="stMarkdownContainer"] table {
         display: block; overflow-x: auto; width: 100%; border-collapse: collapse; border: 1px solid #bbf7d0;
     }
@@ -156,7 +145,6 @@ st.markdown("""
         padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
     }
 
-    /* PC */
     @media only screen and (min-width: 769px) {
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
@@ -176,7 +164,6 @@ st.markdown("""
         div.stButton > button:hover { transform: translateY(2px); border-bottom: 2px solid #14532d; }
     }
 
-    /* MÓVIL */
     @media only screen and (max-width: 768px) {
         .block-container {
             padding-top: 4rem !important; 
@@ -192,7 +179,6 @@ st.markdown("""
         }
     }
 
-    /* LANDSCAPE */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 1rem !important; }
         .header-container {
@@ -335,15 +321,16 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                # Usamos la nueva lógica de relevo
-                with st.spinner("🦖 Procesando..."): 
+                # Usamos la nueva lógica de paciencia
+                with st.spinner("🦖 Procesando (Si tardo un poco, estoy negociando con Google)..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
-                    response_obj = generate_response_with_relay(prompt_final)
+                    response_obj = generate_response_with_patience(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 Todos los modelos están agotados. Espera 1 minuto.")
+                        st.error("🛑 Agotado total. Google me pide descansar unos minutos.")
+                        st.caption("Consejo: Intenta preguntas más cortas o espera 2-3 min.")
                         full_resp = "Error cuota."
                     else:
                         for chunk in response_obj:
