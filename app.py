@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="expanded" 
+    initial_sidebar_state="collapsed" 
 )
 
 DOCS_DIR = "documentos"
@@ -37,7 +37,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA HYBRID ULTRA" ---
+# --- 3. DISEÑO VISUAL "GODZILLA V5 - RESPONSIVE TOTAL" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE (Comunes) --- */
@@ -48,17 +48,34 @@ st.markdown("""
     #MainMenu, footer {visibility: hidden;}
     header {background-color: transparent !important;}
 
+    /* --- SOLUCIÓN PARA TABLAS EN MÓVIL (Scroll Horizontal) --- */
+    div[data-testid="stMarkdownContainer"] table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap; /* Mantiene celdas en una linea para forzar scroll si es necesario */
+        border-collapse: collapse;
+        width: 100%;
+        border: 1px solid #bbf7d0;
+    }
+    div[data-testid="stMarkdownContainer"] th {
+        background-color: #14532d;
+        color: white;
+        padding: 10px;
+    }
+    div[data-testid="stMarkdownContainer"] td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
     /* --- ESTILOS DE PC (IMPACTO VISUAL) --- */
     @media only screen and (min-width: 769px) {
         
-        /* SIDEBAR PREMIUM EN PC */
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-            border-right: 2px solid #4ade80; /* Línea neón separadora */
+            border-right: 2px solid #4ade80; 
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         }
         
-        /* Opciones del Radio Button (El Menú) como TARJETAS */
         div[role="radiogroup"] > label {
             background-color: white;
             padding: 12px;
@@ -69,14 +86,13 @@ st.markdown("""
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         div[role="radiogroup"] > label:hover {
-            transform: translateX(5px); /* Se mueve a la derecha al pasar ratón */
+            transform: translateX(5px); 
             border-color: #16a34a;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             background-color: #f0fdf4;
             cursor: pointer;
         }
 
-        /* Cabecera Principal Épica */
         .header-container {
             background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
             padding: 30px;
@@ -90,7 +106,6 @@ st.markdown("""
         .header-container h1 { font-size: 3rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; letter-spacing: 1px; }
 
-        /* Botones Generales */
         div.stButton > button {
             background: linear-gradient(45deg, #16a34a, #15803d);
             color: white;
@@ -120,11 +135,11 @@ st.markdown("""
         
         .block-container {
             padding-top: 2rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            padding-left: 0.5rem !important; /* Ganamos espacio lateral */
+            padding-right: 0.5rem !important;
         }
 
-        /* Cabecera Compacta */
+        /* Cabecera Móvil Vertical */
         .header-container {
             background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
             padding: 15px;
@@ -137,7 +152,6 @@ st.markdown("""
         .header-container h1 { font-size: 1.5rem !important; margin: 0; }
         .header-container p { display: none; }
 
-        /* Botones Grandes */
         div.stButton > button {
             background-color: #16a34a;
             color: white;
@@ -150,28 +164,38 @@ st.markdown("""
             margin-bottom: 8px;
         }
         
-        /* El menú en móvil se queda simple para no saturar */
         div[role="radiogroup"] > label {
             padding: 10px;
             border-bottom: 1px solid #e5e7eb;
         }
     }
+
+    /* --- MODO HORIZONTAL (LANDSCAPE) MÓVIL --- */
+    /* Cuando giras el móvil, ocultamos casi todo para dejar espacio */
+    @media only screen and (orientation: landscape) and (max-height: 500px) {
+        .header-container {
+            padding: 5px !important;
+            margin-bottom: 5px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header-container h1 { font-size: 1rem !important; }
+        .header-container p { display: none; }
+        .block-container { padding-top: 0.5rem !important; }
+        div[data-testid="stSidebar"] { width: 100px !important; } /* Sidebar más fina si se abre */
+    }
     
-    /* COLORES DE CHAT (COMUNES) */
+    /* COLORES DE CHAT */
     div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; border-radius: 20px 20px 0 20px;}
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
     div[data-testid="stChatMessage"]:nth-child(even) { background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 20px 20px 20px 0;}
 
-    /* UPLOADER ESTILIZADO */
     div[data-testid="stFileUploader"] {
         background-color: white;
         border: 2px dashed #16a34a;
         border-radius: 12px;
         padding: 15px;
-    }
-    div[data-testid="stFileUploader"]:hover {
-        background-color: #f0fdf4;
-        border-color: #15803d;
     }
 </style>
 """, unsafe_allow_html=True)
