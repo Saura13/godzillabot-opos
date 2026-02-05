@@ -38,7 +38,7 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA V9 - CLEAN & STEALTH" ---
+# --- 3. DISEÑO VISUAL "GODZILLA V10 - EL RESCATE DEL MENÚ" ---
 st.markdown("""
 <style>
     /* --- ESTILOS BASE --- */
@@ -47,33 +47,45 @@ st.markdown("""
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* --- LIMPIEZA TOTAL DE INTERFAZ (Adiós botones intrusos) --- */
-    #MainMenu {visibility: hidden;} /* Oculta los 3 puntos */
-    footer {visibility: hidden;} /* Oculta 'Made with Streamlit' */
-    header {visibility: hidden;} /* Oculta la barra superior decorativa */
+    /* --- CIRUGÍA DE LA BARRA SUPERIOR --- */
     
-    /* Ocultar específicamente los botones de Deploy/Fork/GitHub */
-    .stDeployButton {display: none;}
-    [data-testid="stToolbar"] {display: none;}
-    [data-testid="stHeader"] {background: transparent;}
-    
-    /* --- RECUPERACIÓN DEL BOTÓN DE MENÚ (LA FLECHA) --- */
-    /* Hacemos visible SOLO el botón de colapsar/desplegar, aunque el header esté oculto */
+    /* 1. Ocultar SOLO la decoración y los botones de la derecha (Fork, Deploy, 3 puntos) */
+    [data-testid="stToolbar"] {
+        display: none !important; /* Adiós publicidad */
+    }
+    [data-testid="stDecoration"] {
+        display: none !important; /* Adiós línea de colores de Streamlit */
+    }
+    [data-testid="stHeader"] {
+        background-color: transparent !important; /* Fondo transparente */
+        z-index: 1 !important;
+    }
+
+    /* 2. ESTILAR EL BOTÓN DEL MENÚ (IZQUIERDA) PARA QUE SEA VISIBLE */
+    /* Lo forzamos a ser un botón blanco con borde verde */
     [data-testid="stSidebarCollapsedControl"] {
-        visibility: visible !important;
-        color: #15803d !important; /* Verde Godzilla Oscuro */
-        background-color: transparent !important;
-        font-weight: bold;
-        transform: scale(1.2); /* Un poco más grande para el dedo */
-        margin-top: 10px; /* Ajuste de posición */
-        margin-left: 10px;
-        z-index: 999999;
+        display: block !important;
+        background-color: white !important;
+        border: 2px solid #16a34a !important; /* Borde Verde */
+        color: #16a34a !important; /* Icono Verde */
+        border-radius: 50% !important; /* Redondo */
+        padding: 0.3rem !important;
+        margin-top: 1rem !important;
+        margin-left: 0.5rem !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        transition: transform 0.2s ease;
     }
     
-    /* Efecto al pasar el ratón/dedo por la flecha */
+    /* Efecto al tocar el botón */
     [data-testid="stSidebarCollapsedControl"]:hover {
-        color: #16a34a !important; /* Verde más brillante al tocar */
-        background-color: rgba(22, 163, 74, 0.1) !important;
+        transform: scale(1.1);
+        background-color: #f0fdf4 !important;
+    }
+    
+    /* Asegurarnos de que el icono SVG dentro del botón sea verde */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        fill: #16a34a !important;
+        stroke: #16a34a !important;
     }
 
     /* --- SOLUCIÓN TABLAS (Scroll) --- */
@@ -134,7 +146,8 @@ st.markdown("""
     /* --- MÓVIL --- */
     @media only screen and (max-width: 768px) {
         .block-container {
-            padding-top: 3rem !important;
+            /* Damos espacio arriba para que el botón no tape el título */
+            padding-top: 5rem !important; 
             padding-left: 0.5rem !important; 
             padding-right: 0.5rem !important;
         }
@@ -157,12 +170,6 @@ st.markdown("""
             width: 100%;
             min-height: 50px;
         }
-        
-        /* Ajuste fino para la flecha en móvil */
-        [data-testid="stSidebarCollapsedControl"] {
-            margin-top: 5px; 
-            margin-left: 5px;
-        }
     }
     
     /* CHAT COLORS */
@@ -175,13 +182,13 @@ st.markdown("""
 # --- 4. FUNCIONES LÓGICAS (DOBLE MOTOR) ---
 def generate_smart_response(prompt_text):
     try:
-        # Intento 1: Modelo Flash (Rápido)
+        # Intento 1: Modelo Flash
         model = genai.GenerativeModel('gemini-1.5-flash')
         return model.generate_content(prompt_text, stream=True)
     except Exception as e:
         if "429" in str(e) or "quota" in str(e).lower():
             try:
-                # Intento 2: Modelo Pro (Respaldo si hay error de cuota)
+                # Intento 2: Modelo Pro
                 time.sleep(1)
                 model_backup = genai.GenerativeModel('gemini-1.5-pro') 
                 return model_backup.generate_content(prompt_text, stream=True)
@@ -257,7 +264,6 @@ with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
     
-    # CORRECCIÓN: 'expanded=False' para que empiece cerrado
     with st.expander("📤 Cargar Temario (PDFs)", expanded=False):
         up = st.file_uploader("Arrastra archivos aquí", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
