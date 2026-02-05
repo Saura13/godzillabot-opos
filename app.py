@@ -38,46 +38,67 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. SUBRUTINA DE AUTODESCUBRIMIENTO DE MODELOS (TU IDEA MAESTRA) ---
+# --- 3. CEREBRO INTELIGENTE: SISTEMA DE RELEVOS (NUEVO) ---
 @st.cache_resource
-def get_best_available_model():
+def get_model_chain():
     """
-    Pregunta a la API qué modelos existen y elige el mejor disponible
-    para evitar errores 404 por nombres incorrectos.
+    Crea una cadena de mando de modelos. Si el general cae, el teniente toma el mando.
+    Orden: Flash (Rápido) -> Pro (Potente) -> Legacy (Vieja Guardia)
     """
     try:
-        # 1. Obtenemos la lista real de modelos disponibles para tu API Key
-        available_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                available_models.append(m.name)
+        # 1. Obtenemos la lista real de lo que Google nos ofrece hoy
+        all_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        chain = []
         
-        # 2. Lógica de selección (Prioridad: Flash > Pro > Cualquiera)
-        # Buscamos si existe alguno "flash" (rápido y barato)
-        for model in available_models:
-            if 'flash' in model.lower():
-                return model
+        # 2. Reclutamos al mejor Flash (Velocidad)
+        flash = [m for m in all_models if 'flash' in m.lower()]
+        if flash: chain.append(flash[0]) # El más moderno suele salir primero
         
-        # Si no, buscamos alguno "pro" (potente)
-        for model in available_models:
-            if 'pro' in model.lower():
-                return model
-                
-        # Si no, devolvemos el primero que funcione (ej: gemini-1.0-pro)
-        if available_models:
-            return available_models[0]
+        # 3. Reclutamos al mejor Pro (Potencia)
+        pro = [m for m in all_models if 'pro' in m.lower() and 'vision' not in m.lower()]
+        if pro: chain.append(pro[0])
+        
+        # 4. Reclutamos al Veterano (Gemini-Pro 1.0) por seguridad
+        if 'models/gemini-pro' in all_models and 'models/gemini-pro' not in chain:
+            chain.append('models/gemini-pro')
             
-        # Fallback de emergencia total
-        return "models/gemini-pro"
+        # Si la lista está vacía (raro), ponemos los nombres estándar por defecto
+        if not chain: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
         
-    except Exception as e:
-        # Si falla el listado, usamos el clásico seguro
-        return "models/gemini-pro"
+        return chain
+    except:
+        return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
 
-# Ejecutamos la subrutina al inicio
-CURRENT_MODEL_NAME = get_best_available_model()
+# Inicializamos la cadena de mando
+MODEL_CHAIN = get_model_chain()
 
-# --- 4. ARQUITECTURA VISUAL (V12 - MANTENIDA) ---
+def generate_response_with_relay(prompt_text):
+    """
+    Intenta generar respuesta iterando por la cadena de modelos.
+    Si uno falla por cuota (429), salta al siguiente.
+    """
+    last_error = ""
+    
+    for model_name in MODEL_CHAIN:
+        try:
+            # Si estamos reintentando (ya falló uno antes), esperamos 1 seg para dar aire
+            if last_error: time.sleep(1)
+            
+            model = genai.GenerativeModel(model_name)
+            return model.generate_content(prompt_text, stream=True)
+            
+        except Exception as e:
+            last_error = str(e)
+            # Si el error es de Cuota (429) o Modelo no encontrado (404), CONTINUAMOS
+            if "429" in last_error or "quota" in last_error.lower() or "404" in last_error:
+                continue 
+            # Si es otro tipo de error grave, también probamos suerte con el siguiente
+            continue
+
+    # Si llegamos aquí, es que han caído todos los soldados
+    return f"Error_Quota: {last_error}"
+
+# --- 4. ARQUITECTURA VISUAL (V13 - CONSERVADA) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA === */
@@ -86,7 +107,7 @@ st.markdown("""
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. BOTÓN DEL MENÚ (SIDEBAR TRIGGER) === */
+    /* === 2. BOTÓN MENÚ (SIDEBAR) - BURBUJA FLOTANTE === */
     [data-testid="stSidebarCollapsedControl"] {
         display: block !important;
         background-color: white !important;
@@ -98,13 +119,16 @@ st.markdown("""
         padding: 5px !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
         z-index: 100 !important; 
+        position: fixed;
+        top: 15px;
+        left: 15px;
     }
     [data-testid="stSidebarCollapsedControl"]:hover {
         transform: scale(1.1);
         background-color: #f0fdf4 !important;
     }
 
-    /* === 3. ESTÉTICA GENERAL === */
+    /* === 3. ESTÉTICA === */
     .stApp { background-color: #f0fdf4; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
     .header-container {
@@ -116,11 +140,12 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
         border-bottom: 5px solid #4ade80;
-        margin-top: 10px;
+        margin-top: 50px; /* Margen extra para no chocar con el botón flotante */
     }
     .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
     .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
 
+    /* Tablas */
     div[data-testid="stMarkdownContainer"] table {
         display: block; overflow-x: auto; width: 100%; border-collapse: collapse; border: 1px solid #bbf7d0;
     }
@@ -131,6 +156,7 @@ st.markdown("""
         padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
     }
 
+    /* PC */
     @media only screen and (min-width: 769px) {
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
@@ -150,12 +176,13 @@ st.markdown("""
         div.stButton > button:hover { transform: translateY(2px); border-bottom: 2px solid #14532d; }
     }
 
+    /* MÓVIL */
     @media only screen and (max-width: 768px) {
         .block-container {
-            padding-top: 4.5rem !important; 
+            padding-top: 4rem !important; 
             padding-left: 0.8rem !important; padding-right: 0.8rem !important;
         }
-        .header-container { padding: 20px; margin-bottom: 20px; }
+        .header-container { padding: 20px; margin-bottom: 20px; margin-top: 40px; }
         .header-container h1 { font-size: 1.8rem !important; }
         .header-container p { font-size: 0.9rem !important; display: block; }
 
@@ -165,17 +192,15 @@ st.markdown("""
         }
     }
 
+    /* LANDSCAPE */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 1rem !important; }
         .header-container {
-            padding: 5px !important; margin-bottom: 10px !important;
+            padding: 5px !important; margin-bottom: 10px !important; margin-top: 0px;
             display: flex; align-items: center; justify-content: center; min-height: 40px;
         }
         .header-container h1 { font-size: 1.2rem !important; margin: 0; }
         .header-container p { display: none !important; }
-        [data-testid="stSidebarCollapsedControl"] {
-            width: 35px !important; height: 35px !important; top: 5px !important; left: 5px !important;
-        }
     }
     
     div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
@@ -184,19 +209,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. LÓGICA DE RESPUESTA USANDO EL MODELO DETECTADO ---
-def generate_response(prompt_text):
-    try:
-        # Usamos la variable global descubierta al inicio
-        model = genai.GenerativeModel(CURRENT_MODEL_NAME)
-        return model.generate_content(prompt_text, stream=True)
-    except Exception as e:
-        error_msg = str(e)
-        if "429" in error_msg or "quota" in error_msg.lower():
-             return f"Error_Quota: {error_msg}"
-        else:
-             return f"Error_Gen: {error_msg}"
-
+# --- 5. FUNCIONES AUXILIARES ---
 def save_uploaded_file(uploaded_file):
     try:
         with open(os.path.join(DOCS_DIR, uploaded_file.name), "wb") as f:
@@ -322,19 +335,16 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                with st.spinner(f"🦖 Procesando con {CURRENT_MODEL_NAME}..."): 
+                # Usamos la nueva lógica de relevo
+                with st.spinner("🦖 Procesando..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
-                    response_obj = generate_response(prompt_final)
+                    response_obj = generate_response_with_relay(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 Límite de velocidad alcanzado.")
-                        st.info("⏳ Espera 1 minuto. Godzilla está recuperando aliento.")
+                        st.error("🛑 Todos los modelos están agotados. Espera 1 minuto.")
                         full_resp = "Error cuota."
-                    elif isinstance(response_obj, str) and response_obj.startswith("Error_Gen"):
-                         st.error(f"Error técnico: {response_obj}")
-                         st.warning("Prueba a recargar la página para que busque un modelo nuevo.")
                     else:
                         for chunk in response_obj:
                             if chunk.text:
