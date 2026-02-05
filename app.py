@@ -38,61 +38,47 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. DISEÑO VISUAL "GODZILLA V11 - RETORNO ÉPICO & MENÚ FIX" ---
+# --- 3. ARQUITECTURA VISUAL (CSS MAESTRO) ---
 st.markdown("""
 <style>
-    /* --- ESTILOS BASE --- */
-    .stApp {
-        background-color: #f0fdf4;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    /* --- 1. LIMPIEZA DE PUBLICIDAD (Derecha) --- */
-    /* Ocultamos los botones de Fork, Deploy y los 3 puntos */
-    [data-testid="stToolbar"] {
-        visibility: hidden !important;
-        height: 0 !important;
-    }
-    [data-testid="stDecoration"] {
-        display: none !important;
-    }
+    /* === 1. LIMPIEZA DE ENTORNO (Adiós Publicidad) === */
+    /* Hacemos transparente la barra superior, NO invisible (para que el botón funcione) */
     [data-testid="stHeader"] {
         background-color: transparent !important;
-        z-index: 10 !important; /* Z-index bajo para no molestar */
+        z-index: 90 !important;
     }
-    footer {visibility: hidden;}
+    /* Ocultamos específicamente los botones de la derecha (Fork, Menu, Deploy) */
+    [data-testid="stToolbar"] { display: none !important; }
+    [data-testid="stDecoration"] { display: none !important; }
+    footer { visibility: hidden; }
 
-    /* --- 2. RESCATE DEL MENÚ (Izquierda) --- */
-    /* Forzamos que el botón de abrir sidebar sea VISIBLE aunque la barra esté oculta */
+    /* === 2. BOTÓN DEL MENÚ (SIDEBAR TRIGGER) === */
+    /* Lo diseñamos como una burbuja flotante visible y TÁCTIL */
     [data-testid="stSidebarCollapsedControl"] {
-        visibility: visible !important;
         display: block !important;
-        
-        /* Estilo Burbuja para que se vea bien */
         background-color: white !important;
         border: 2px solid #16a34a !important; /* Borde Verde */
         color: #16a34a !important; /* Icono Verde */
-        
         border-radius: 50% !important;
         width: 45px !important;
         height: 45px !important;
         padding: 5px !important;
-        
-        /* Posicionamiento fijo para asegurar que se pueda tocar */
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important; /* Por encima de TODO */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        /* Posición fija para que siempre esté ahí */
+        z-index: 100 !important; 
     }
-    
-    /* Efecto al tocar */
     [data-testid="stSidebarCollapsedControl"]:hover {
         transform: scale(1.1);
         background-color: #f0fdf4 !important;
     }
 
-    /* --- 3. ESTÉTICA ÉPICA (Recuperada) --- */
+    /* === 3. ESTÉTICA GENERAL (PC & MÓVIL) === */
+    .stApp {
+        background-color: #f0fdf4;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Cabecera Épica */
     .header-container {
         background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
         padding: 30px;
@@ -101,126 +87,102 @@ st.markdown("""
         text-align: center;
         margin-bottom: 30px;
         box-shadow: 0 10px 25px rgba(21, 128, 61, 0.4);
-        border-bottom: 5px solid #4ade80; /* Neón */
-        margin-top: 20px; /* Espacio para no chocar con el botón del menú */
+        border-bottom: 5px solid #4ade80;
+        margin-top: 10px; /* Margen para no chocar con el botón */
     }
-    .header-container h1 { 
-        font-size: 2.8rem; 
-        margin: 0; 
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
-        font-weight: 800;
-    }
-    .header-container p { 
-        font-size: 1.2rem; 
-        opacity: 0.9; 
-        margin-top: 10px; 
-        letter-spacing: 1px; 
-        font-style: italic;
-    }
+    .header-container h1 { font-size: 2.8rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 800;}
+    .header-container p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; font-style: italic; }
 
-    /* --- 4. SOLUCIÓN TABLAS (Scroll) --- */
+    /* Tablas Inteligentes (Scroll) */
     div[data-testid="stMarkdownContainer"] table {
-        display: block;
-        overflow-x: auto; 
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #bbf7d0;
+        display: block; overflow-x: auto; width: 100%; border-collapse: collapse; border: 1px solid #bbf7d0;
     }
     div[data-testid="stMarkdownContainer"] th {
-        background-color: #14532d;
-        color: white;
-        padding: 12px;
-        text-align: left;
-        white-space: normal !important;
-        min-width: 100px;
+        background-color: #14532d; color: white; padding: 12px; min-width: 100px; text-align: left;
     }
     div[data-testid="stMarkdownContainer"] td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        vertical-align: top; 
-        white-space: normal !important; 
-        min-width: 120px; 
-        max-width: 300px; 
+        padding: 10px; border-bottom: 1px solid #eee; min-width: 120px; max-width: 300px; vertical-align: top;
     }
 
-    /* --- MÓVIL --- */
-    @media only screen and (max-width: 768px) {
-        .block-container {
-            padding-top: 4rem !important; /* Espacio para el botón flotante */
-            padding-left: 0.8rem !important; 
-            padding-right: 0.8rem !important;
-        }
-        
-        .header-container {
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .header-container h1 { 
-            font-size: 1.8rem !important; /* Un poco más pequeño en móvil pero impactante */
-        }
-        .header-container p { 
-            font-size: 0.9rem !important;
-            display: block !important; /* FORZAMOS QUE SE VEA EL SUBTÍTULO */
-        }
-
-        div.stButton > button {
-            background: linear-gradient(45deg, #16a34a, #15803d);
-            color: white;
-            border-radius: 8px;
-            padding: 0.8rem;
-            width: 100%;
-            min-height: 50px;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        /* Ajuste fino del botón de menú en pantallas pequeñas */
-        [data-testid="stSidebarCollapsedControl"] {
-            top: 10px !important;
-            left: 10px !important;
-            width: 40px !important;
-            height: 40px !important;
-        }
-    }
-    
-    /* PC: Sidebar Estilizada */
+    /* === 4. AJUSTES ESPECÍFICOS PARA PC === */
     @media only screen and (min-width: 769px) {
+        /* Sidebar Premium */
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-            border-right: 2px solid #4ade80; 
+            border-right: 2px solid #4ade80;
         }
+        /* Tarjetas del Menú */
+        div[role="radiogroup"] > label {
+            background-color: white; padding: 12px; border-radius: 8px; margin-bottom: 8px;
+            border: 1px solid #bbf7d0; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        div[role="radiogroup"] > label:hover {
+            transform: translateX(5px); border-color: #16a34a; background-color: #f0fdf4; cursor: pointer;
+        }
+        /* Botones 3D */
         div.stButton > button {
-            background: linear-gradient(45deg, #16a34a, #15803d);
-            color: white;
-            border-radius: 10px;
-            padding: 12px;
-            border-bottom: 4px solid #14532d;
-            font-weight: bold;
-            text-transform: uppercase;
+            background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 10px;
+            padding: 12px; border-bottom: 4px solid #14532d; font-weight: bold; text-transform: uppercase;
         }
-        div.stButton > button:hover {
-            transform: translateY(2px);
-            border-bottom: 2px solid #14532d;
+        div.stButton > button:hover { transform: translateY(2px); border-bottom: 2px solid #14532d; }
+    }
+
+    /* === 5. AJUSTES ESPECÍFICOS PARA MÓVIL === */
+    @media only screen and (max-width: 768px) {
+        .block-container {
+            /* Espacio arriba para que el botón no tape el título */
+            padding-top: 4.5rem !important; 
+            padding-left: 0.8rem !important; padding-right: 0.8rem !important;
+        }
+        
+        /* Cabecera Móvil (Vertical) */
+        .header-container { padding: 20px; margin-bottom: 20px; }
+        .header-container h1 { font-size: 1.8rem !important; }
+        .header-container p { font-size: 0.9rem !important; display: block; } /* Subtítulo visible */
+
+        /* Botones Táctiles */
+        div.stButton > button {
+            background: linear-gradient(45deg, #16a34a, #15803d); color: white; border-radius: 8px;
+            padding: 0.8rem; width: 100%; min-height: 50px; font-weight: bold;
         }
     }
-    
-    /* CHAT COLORS */
+
+    /* === 6. MODO HORIZONTAL (LANDSCAPE) - EL ENCOGEDOR === */
+    /* Cuando giras el móvil, todo se hace pequeño para dejarte trabajar */
+    @media only screen and (orientation: landscape) and (max-height: 600px) {
+        .block-container { padding-top: 1rem !important; }
+        
+        .header-container {
+            padding: 5px !important; margin-bottom: 10px !important;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 40px;
+        }
+        .header-container h1 { font-size: 1.2rem !important; margin: 0; }
+        .header-container p { display: none !important; } /* Ocultamos subtítulo */
+        
+        /* Botón Sidebar más pequeño en horizontal */
+        [data-testid="stSidebarCollapsedControl"] {
+            width: 35px !important; height: 35px !important; top: 5px !important; left: 5px !important;
+        }
+    }
+
+    /* Chat Colors */
     div[data-testid="stChatMessage"]:nth-child(odd) { background-color: #14532d; border: none; }
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: white !important; }
     div[data-testid="stChatMessage"]:nth-child(even) { background-color: white; border: 1px solid #bbf7d0; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. FUNCIONES LÓGICAS (DOBLE MOTOR) ---
+# --- 4. LÓGICA INTELIGENTE (DOBLE MOTOR) ---
 def generate_smart_response(prompt_text):
     try:
-        # Intento 1: Modelo Flash
+        # 1. Intento Rápido (Flash)
         model = genai.GenerativeModel('gemini-1.5-flash')
         return model.generate_content(prompt_text, stream=True)
     except Exception as e:
         if "429" in str(e) or "quota" in str(e).lower():
             try:
-                # Intento 2: Modelo Pro (Respaldo)
+                # 2. Intento Robusto (Pro) - Pausa de 1s para respirar
                 time.sleep(1)
                 model_backup = genai.GenerativeModel('gemini-1.5-pro') 
                 return model_backup.generate_content(prompt_text, stream=True)
@@ -291,7 +253,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 5. INTERFAZ LATERAL ---
+# --- 5. MENÚ LATERAL (DESCRIPTIVO Y FUNCIONAL) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -308,8 +270,19 @@ with st.sidebar:
         st.info("ℹ️ Sube PDFs para empezar.")
     
     st.markdown("---")
-    mode = st.radio("Estrategia:", ["💀 Simulacro", "💬 Chat", "📝 Resumen", "📊 Excel"])
+    st.markdown("### 🎯 Objetivo de Hoy")
+    # NOMBRES LARGOS RESTAURADOS
+    mode = st.radio(
+        "Selecciona estrategia:", 
+        [
+            "💀 Simulacro de Examen (Test)", 
+            "💬 Chat Interactivo con Temario", 
+            "📝 Resumen de Alto Rendimiento", 
+            "📊 Extracción de Datos a Excel"
+        ]
+    )
     
+    st.markdown("---")
     c1, c2 = st.columns(2)
     if c1.button("💾 Guardar"): save_session_history()
     if c2.button("🗑️ Reiniciar"): st.session_state.messages = []; st.rerun()
@@ -320,7 +293,6 @@ with st.sidebar:
         if load != "..." and st.button("Abrir"): load_session_history(load)
 
 # --- 6. ZONA PRINCIPAL ---
-# AQUÍ HEMOS RESTAURADO EL TÍTULO GRANDE Y LA FRASE
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot Oposiciones</h1>
