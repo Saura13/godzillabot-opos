@@ -46,13 +46,9 @@ if "pdf_text" not in st.session_state:
 if "last_files" not in st.session_state:
     st.session_state.last_files = []
 
-# --- 4. OPTIMIZACIÓN DE VELOCIDAD (LECTURA CACHEADA) ---
+# --- 4. LECTURA RÁPIDA DE PDFS ---
 @st.cache_data(show_spinner=False)
 def get_pdf_text_fast(file_names):
-    """
-    Lee los PDFs solo una vez y guarda el resultado en caché.
-    Si los archivos son los mismos, devuelve el texto instantáneamente.
-    """
     text = ""
     for name in file_names:
         try:
@@ -60,31 +56,39 @@ def get_pdf_text_fast(file_names):
             reader = PdfReader(path)
             for page in reader.pages:
                 text += page.extract_text() + "\n"
-        except:
-            continue
+        except: continue
     return text
 
-# --- 5. LÓGICA DE MODELOS Y PACIENCIA ---
+# --- 5. LÓGICA DE MODELOS (OPTIMIZACIÓN DE VELOCIDAD) ---
 @st.cache_resource
 def get_model_list():
     try:
-        all = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # Prioridad absoluta a FLASH (Velocidad)
-        flash = [m for m in all if 'flash' in m.lower()]
-        pro = [m for m in all if 'pro' in m.lower() and 'vision' not in m.lower()]
-        return flash + pro + ['gemini-1.5-flash', 'gemini-pro']
+        all_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        # ESTRATEGIA DE VELOCIDAD:
+        # 1. Buscar modelos "Flash" (Son los más rápidos)
+        flash_models = [m for m in all_models if 'flash' in m.lower()]
+        # 2. Buscar modelos "Pro" (Respaldo potente)
+        pro_models = [m for m in all_models if 'pro' in m.lower() and 'vision' not in m.lower()]
+        
+        # Ordenamos: Primero todos los Flash, luego los Pro
+        priorities = flash_models + pro_models
+        
+        if not priorities: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        return priorities
     except:
-        return ['gemini-1.5-flash', 'gemini-pro']
+        return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
 
 MODELS_AVAILABLE = get_model_list()
 
 def generate_response_with_patience(prompt_text):
     max_retries = 3
+    # MENSAJES DE ESPERA (RECUPERADOS)
     frases_espera = [
         "🦖 Godzilla está recargando su aliento atómico...",
-        "⏳ Negociando cuota con la burocracia de Google...",
-        "🦕 Masticando datos masivos, un momento...",
-        "🔥 Calentando motores neuronales..."
+        "⏳ Negociando prioridad con Google...",
+        "🦕 Masticando gigas de normativa...",
+        "🔥 Buscando el artículo exacto en la red neuronal...",
+        "⚡ Acelerando núcleos de procesamiento..."
     ]
     
     for attempt in range(max_retries):
@@ -94,12 +98,20 @@ def generate_response_with_patience(prompt_text):
                 return model.generate_content(prompt_text, stream=True)
             except Exception as e:
                 error_msg = str(e)
+                # Si es error de cuota (429), activamos la espera con personalidad
                 if "429" in error_msg or "quota" in error_msg.lower():
-                    wait_time = (attempt + 1) * 3 # Reducimos un poco la espera para intentar ser más rápidos
-                    if attempt > 0: # Solo mostramos toast si la cosa se pone fea
+                    # OPTIMIZACIÓN: Espera inicial más corta (2s, luego 4s, luego 6s)
+                    wait_time = (attempt + 1) * 2 
+                    
+                    # Mostrar mensaje divertido (Toast)
+                    if attempt >= 0: 
                          msg = random.choice(frases_espera)
-                         st.toast(f"{msg} (Reintento {attempt+1})", icon="🦖")
+                         st.toast(f"{msg} (Reintentando...)", icon="🦖")
+                    
                     time.sleep(wait_time)
+                    continue
+                # Si el modelo no existe (404), pasamos al siguiente sin esperar
+                if "404" in error_msg:
                     continue
                 continue
     return "Error_Quota_Final"
@@ -116,7 +128,7 @@ def auto_scroll():
     """
     components.html(js, height=0, width=0)
 
-# --- 7. ESTÉTICA "MODO PAPEL" (CSS DEFINITIVO) ---
+# --- 7. ESTÉTICA "MODO PAPEL" (MANTENIDA) ---
 st.markdown("""
 <style>
     [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
@@ -292,9 +304,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# GESTIÓN INTELIGENTE DE CONTEXTO (PRE-CARGA)
+# GESTIÓN INTELIGENTE DE CONTEXTO
 if files != st.session_state.last_files:
-    # Solo si han cambiado los archivos, recargamos el texto
     if files:
         with st.spinner("🦖 Digiriendo documentos nuevos..."):
             st.session_state.pdf_text = get_pdf_text_fast(files)
@@ -305,7 +316,7 @@ if files != st.session_state.last_files:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# PINTAR HISTORIAL
+# HISTORIAL + BOTONES
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
@@ -334,7 +345,6 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             placeholder = st.empty()
             full_resp = ""
             try:
-                # Usamos el texto YA cargado en memoria (Velocidad Turbo)
                 text_context = st.session_state.pdf_text 
                 
                 with st.spinner("🦖 Godzilla responde..."): 
@@ -350,5 +360,5 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
                                 placeholder.markdown(full_resp + "▌")
                         placeholder.markdown(full_resp)
                         st.session_state.messages.append({"role": "assistant", "content": full_resp})
-                        st.rerun() # Recarga para pintar botones y scroll
+                        st.rerun() 
             except Exception as e: st.error(f"Error: {e}")
