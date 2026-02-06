@@ -8,7 +8,7 @@ from datetime import datetime
 import io
 import time
 import random
-import streamlit.components.v1 as components  # <--- NUEVO INGREDIENTE PARA EL SCROLL
+import streamlit.components.v1 as components
 
 # --- 1. SEGURIDAD DE LIBRERÍAS ---
 try:
@@ -59,6 +59,14 @@ MODELS_AVAILABLE = get_model_list()
 
 def generate_response_with_patience(prompt_text):
     max_retries = 3
+    # Frases aleatorias para amenizar la espera
+    frases_espera = [
+        "🦖 Godzilla está recargando su aliento atómico...",
+        "⏳ Negociando cuota con la burocracia de Google...",
+        "🦕 Masticando datos masivos, un momento...",
+        "🔥 Calentando motores neuronales..."
+    ]
+    
     for attempt in range(max_retries):
         for model_name in MODELS_AVAILABLE:
             try:
@@ -68,6 +76,9 @@ def generate_response_with_patience(prompt_text):
                 error_msg = str(e)
                 if "429" in error_msg or "quota" in error_msg.lower():
                     wait_time = (attempt + 1) * 5
+                    # MENSAJE DE ESPERA DIVERTIDO
+                    msg = random.choice(frases_espera)
+                    st.toast(f"{msg} (Intento {attempt+1}/{max_retries})", icon="🦖")
                     time.sleep(wait_time)
                     continue
                 if "404" in error_msg:
@@ -75,20 +86,22 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 4. FUNCIÓN SCROLL AUTOMÁTICO (NUEVA) ---
+# --- 4. FUNCIÓN SCROLL AUTOMÁTICO (AJUSTADA) ---
 def auto_scroll():
-    # Este script busca el contenedor principal de la app y lo baja hasta el fondo
+    # Añadimos un pequeño timeout para asegurar que el contenido cargó
     js = """
     <script>
-        var body = window.parent.document.querySelector(".main");
-        if (body) {
-            body.scrollTop = body.scrollHeight;
-        }
+        setTimeout(function() {
+            var body = window.parent.document.querySelector(".main");
+            if (body) {
+                body.scrollTop = body.scrollHeight;
+            }
+        }, 300); // 300ms de retraso para asegurar
     </script>
     """
     components.html(js, height=0, width=0)
 
-# --- 5. DISEÑO VISUAL "MODO FOLIO BLANCO" (CSS V18 - INTACTO) ---
+# --- 5. DISEÑO VISUAL "MODO FOLIO BLANCO" (MANTENIDO) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA TOTAL === */
@@ -267,7 +280,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 8. INTERFAZ ---
+# --- 8. INTERFAZ (Bucle Principal) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -314,17 +327,33 @@ st.markdown("""
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]): st.markdown(msg["content"])
+# --- BUCLE DE HISTORIAL CON BOTONES PERSISTENTES ---
+for i, msg in enumerate(st.session_state.messages):
+    with st.chat_message(msg["role"]): 
+        st.markdown(msg["content"])
+        
+        # SI ES RESPUESTA DE GODZILLA, AÑADIMOS SUS BOTONES
+        if msg["role"] == "assistant":
+            key_base = f"btn_{i}" # Clave única para cada botón
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if WORD_AVAILABLE:
+                    docx = create_word_docx(msg["content"])
+                    st.download_button("📄 Word", docx, f"Godzilla_Respuesta_{i}.docx", 
+                                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                     key=f"{key_base}_word")
+            with col2:
+                # Solo mostrar botón Excel si parece una tabla o era modo Excel
+                if "|" in msg["content"]:
+                    st.download_button("📊 Excel", msg["content"], f"datos_{i}.csv", "text/csv", 
+                                     key=f"{key_base}_excel")
 
-# --- LÓGICA DE ENVÍO Y SCROLL ---
+# --- LÓGICA DE NUEVA RESPUESTA ---
 if prompt := st.chat_input("Escribe tu pregunta..."):
-    # 1. Guardar y mostrar mensaje usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
-    # 2. ACTIVAR SCROLL INMEDIATO (Para bajar al spinner)
-    auto_scroll()
+    auto_scroll() # Bajar para ver "Pensando..."
 
     if not files:
         st.warning("⚠️ Selecciona documentos en el menú lateral.")
@@ -334,14 +363,14 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Procesando..."): 
+                with st.spinner("🦖 Godzilla está masticando la normativa... (Un segundo)"): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
                     response_obj = generate_response_with_patience(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 Agotado. Espera un poco.")
+                        st.error("🛑 Agotado total. Necesito un descanso de 2 minutos.")
                         full_resp = "Error cuota."
                     else:
                         for chunk in response_obj:
@@ -351,18 +380,7 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
                         placeholder.markdown(full_resp)
                         st.session_state.messages.append({"role": "assistant", "content": full_resp})
                         
-                        # 3. ACTIVAR SCROLL AL FINALIZAR (Para ver botones)
-                        auto_scroll()
-                
-                if full_resp and "Error" not in full_resp:
-                    st.markdown("---")
-                    col1, col2 = st.columns([1, 1])
-                    with col1:
-                        if WORD_AVAILABLE:
-                            docx = create_word_docx(full_resp)
-                            st.download_button("📄 Word", docx, f"Godzilla.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                    with col2:
-                        if "Excel" in mode or "|" in full_resp:
-                            st.download_button("📊 Excel", full_resp, "datos.csv", "text/csv")
+                        # AL TERMINAR, FORZAMOS RECARGA PARA QUE SALGAN LOS BOTONES
+                        st.rerun() 
 
             except Exception as e: st.error(f"Error crítico: {e}")
