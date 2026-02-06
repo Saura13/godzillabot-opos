@@ -46,7 +46,7 @@ if "pdf_text" not in st.session_state:
 if "last_files" not in st.session_state:
     st.session_state.last_files = []
 
-# --- 4. LÓGICA DE VELOCIDAD Y MODELOS (INTACTO) ---
+# --- 4. LÓGICA (INTACTO) ---
 @st.cache_data(show_spinner=False)
 def get_pdf_text_fast(file_names):
     text = ""
@@ -79,8 +79,7 @@ def generate_response_with_patience(prompt_text):
         "🦖 Godzilla está recargando su aliento atómico...",
         "⏳ Negociando prioridad con Google...",
         "🦕 Masticando gigas de normativa...",
-        "🔥 Buscando el artículo exacto en la red neuronal...",
-        "⚡ Acelerando núcleos de procesamiento..."
+        "🔥 Buscando el artículo exacto en la red neuronal..."
     ]
     
     for attempt in range(max_retries):
@@ -102,7 +101,6 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 5. SCROLL (INTACTO) ---
 def auto_scroll():
     js = """
     <script>
@@ -114,130 +112,116 @@ def auto_scroll():
     """
     components.html(js, height=0, width=0)
 
-# --- 6. ESTÉTICA OPTIMIZADA MÓVIL (AQUÍ ESTÁ LA MAGIA) ---
+# --- 5. ESTÉTICA OPTIMIZADA (CSS MODIFICADO PARA MENÚ) ---
 st.markdown("""
 <style>
-    /* === 1. LIMPIEZA TOTAL === */
-    [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
+    /* 1. CONFIGURACIÓN BASE */
+    [data-testid="stHeader"] { 
+        background-color: transparent !important; 
+        z-index: 1 !important; 
+        height: 60px !important; /* Asegurar altura para que no oculte cosas */
+    }
+    
+    /* Ocultar elementos molestos, PERO NO EL CONTENEDOR DEL MENÚ */
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. FONDO Y FUENTES === */
+    /* 2. FONDO Y TEXTO */
     .stApp, [data-testid="stAppViewContainer"], .main { 
         background-color: #ffffff !important; 
         font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     }
+
+    /* 3. ¡¡¡EL BOTÓN DEL MENÚ (LA CLAVE)!!! */
+    /* Lo forzamos a ser visible, fijo y por encima de todo */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        background-color: white !important;
+        color: #16a34a !important; /* Verde */
+        border: 2px solid #16a34a !important;
+        border-radius: 50% !important;
+        width: 50px !important;
+        height: 50px !important;
+        align-items: center;
+        justify-content: center;
+        
+        /* POSICIONAMIENTO FIJO AGRESIVO */
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 9999999 !important; /* Por encima del propio Dios */
+        
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+    }
     
-    /* === 3. OPTIMIZACIÓN DE INPUT (ANTI-ZOOM IPHONE) === */
-    /* Forzamos 16px en el input para que iOS no haga zoom al escribir */
-    .stChatInput textarea {
-        font-size: 16px !important;
+    /* Asegurar que el icono dentro del botón sea verde */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        fill: #16a34a !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 
-    /* === 4. CHAT BUBBLES OPTIMIZADAS === */
+    /* 4. CHAT BUBBLES */
     .stChatMessage { background-color: transparent !important; }
-
     div[data-testid="stChatMessage"]:nth-child(odd) { 
         background-color: #f3f4f6 !important; 
         border: 1px solid #e5e7eb !important; border-radius: 12px !important;
-        color: #111827 !important; padding: 12px !important; /* Padding ajustado para móvil */
+        color: #111827 !important; padding: 12px !important;
     }
-    div[data-testid="stChatMessage"]:nth-child(odd) * { color: #111827 !important; }
-    
     div[data-testid="stChatMessage"]:nth-child(even) { 
         background-color: #ffffff !important; 
         border: 1px solid #d1d5db !important; border-radius: 12px !important;
         color: #000000 !important; padding: 12px !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
     }
-    div[data-testid="stChatMessage"]:nth-child(even) * { color: #000000 !important; }
+    div[data-testid="stChatMessage"] * { color: inherit !important; }
 
-    /* === 5. BOTÓN MENÚ (SIDEBAR TRIGGER) === */
-    /* Aseguramos que sea fácil de tocar en móvil */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: block !important;
-        background-color: white !important;
-        border: 2px solid #16a34a !important;
-        color: #16a34a !important;
-        border-radius: 50% !important;
-        width: 48px !important; /* Un poco más grande para el dedo */
-        height: 48px !important;
-        padding: 8px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
-        z-index: 999999 !important; 
-        position: fixed; 
-        top: 10px; 
-        left: 10px;
-    }
+    /* 5. INPUT IPHONE FIX */
+    .stChatInput textarea { font-size: 16px !important; }
 
-    /* === 6. CABECERA Y RESPONSIVIDAD === */
+    /* 6. CABECERA */
     .header-container {
         background: linear-gradient(90deg, #166534 0%, #15803d 100%);
         padding: 20px; border-radius: 10px; color: white; text-align: center;
-        margin-bottom: 20px; margin-top: 50px; /* Margen para salvar el botón */
+        margin-bottom: 20px; 
+        margin-top: 50px; /* Margen superior para que el botón no tape el título */
         box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid #4ade80;
     }
     .header-container h1 { font-size: 2.2rem; margin: 0; font-weight: 800;}
     .header-container p { font-size: 1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
 
-    /* MÓVIL PORTRAIT (VERTICAL) */
+    /* 7. MÓVIL RESPONSIVE */
     @media only screen and (max-width: 768px) {
-        /* Ajuste de márgenes laterales para ganar espacio */
-        .block-container { 
-            padding-top: 4rem !important; 
-            padding-left: 0.5rem !important; 
-            padding-right: 0.5rem !important; 
-        }
+        .block-container { padding-top: 4rem !important; padding-left: 0.5rem; padding-right: 0.5rem; }
         .header-container { padding: 15px; margin-top: 45px; }
         .header-container h1 { font-size: 1.6rem !important; }
-        .header-container p { font-size: 0.8rem; }
     }
 
-    /* MÓVIL LANDSCAPE (HORIZONTAL) - LA CLAVE */
+    /* 8. LANDSCAPE */
     @media only screen and (orientation: landscape) and (max-height: 600px) {
         .block-container { padding-top: 0.5rem !important; }
-        
-        /* Cabecera ultra-compacta */
         .header-container {
-            padding: 5px !important; 
-            margin-bottom: 10px !important; 
-            margin-top: 0px !important;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 40px;
-            border-radius: 0 0 10px 10px; /* Solo bordes de abajo */
+            padding: 5px !important; margin-bottom: 10px !important; margin-top: 0px !important;
+            display: flex; align-items: center; justify-content: center; min-height: 40px;
         }
         .header-container h1 { font-size: 1.1rem !important; margin: 0; }
-        .header-container p { display: none !important; } /* Ocultar subtítulo */
-        
-        /* Botón sidebar más pequeño para no molestar */
+        .header-container p { display: none !important; }
+        /* Botón más pequeño en horizontal */
         [data-testid="stSidebarCollapsedControl"] {
-            width: 35px !important; 
-            height: 35px !important; 
-            padding: 5px !important;
-            top: 5px !important; 
-            left: 5px !important;
+            width: 35px !important; height: 35px !important; top: 5px !important; left: 5px !important;
         }
     }
-
-    /* === 7. TABLAS PERFECTAS === */
-    div[data-testid="stMarkdownContainer"] table {
-        width: 100%; border-collapse: collapse !important; border: 1px solid #374151 !important;
-    }
-    div[data-testid="stMarkdownContainer"] th {
-        background-color: #e5e7eb !important; color: #000000 !important; 
-        border: 1px solid #9ca3af !important; padding: 6px; font-size: 0.9rem;
-    }
-    div[data-testid="stMarkdownContainer"] td {
-        border: 1px solid #d1d5db !important; padding: 6px; color: #000000; 
-        vertical-align: top; font-size: 0.9rem;
-    }
+    
+    /* 9. TABLAS */
+    div[data-testid="stMarkdownContainer"] table { width: 100%; border-collapse: collapse !important; border: 1px solid #374151 !important; }
+    div[data-testid="stMarkdownContainer"] th { background-color: #e5e7eb !important; color: #000000 !important; border: 1px solid #9ca3af !important; padding: 6px; }
+    div[data-testid="stMarkdownContainer"] td { border: 1px solid #d1d5db !important; padding: 6px; color: #000000; vertical-align: top; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 7. FUNCIONES DOCS Y PROMPTS (INTACTO) ---
+# --- 6. FUNCIONES DOCS (INTACTO) ---
 def create_word_docx(text_content):
     if not WORD_AVAILABLE: return None
     doc = Document()
@@ -297,7 +281,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 8. MENÚ LATERAL (INTACTO) ---
+# --- 7. MENÚ LATERAL (INTACTO) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -329,7 +313,7 @@ with st.sidebar:
         load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
         if load != "..." and st.button("Abrir"): load_session_history(load)
 
-# --- 9. ZONA PRINCIPAL (INTACTO) ---
+# --- 8. ZONA PRINCIPAL (INTACTO) ---
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot Oposiciones</h1>
@@ -337,7 +321,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# GESTIÓN DE CONTEXTO
 if files != st.session_state.last_files:
     if files:
         with st.spinner("🦖 Digiriendo documentos nuevos..."):
@@ -349,7 +332,6 @@ if files != st.session_state.last_files:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# HISTORIAL
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
@@ -365,7 +347,6 @@ for i, msg in enumerate(st.session_state.messages):
                 if "|" in msg["content"]:
                     st.download_button("📊 Excel", msg["content"], f"datos_{i}.csv", "text/csv", key=f"{key_base}_x")
 
-# CHAT INPUT
 if prompt := st.chat_input("Escribe tu pregunta..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
