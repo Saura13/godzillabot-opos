@@ -8,6 +8,7 @@ from datetime import datetime
 import io
 import time
 import random
+import streamlit.components.v1 as components  # <--- NUEVO INGREDIENTE PARA EL SCROLL
 
 # --- 1. SEGURIDAD DE LIBRERÍAS ---
 try:
@@ -74,7 +75,20 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 4. DISEÑO VISUAL "MODO FOLIO BLANCO" (CSS V18) ---
+# --- 4. FUNCIÓN SCROLL AUTOMÁTICO (NUEVA) ---
+def auto_scroll():
+    # Este script busca el contenedor principal de la app y lo baja hasta el fondo
+    js = """
+    <script>
+        var body = window.parent.document.querySelector(".main");
+        if (body) {
+            body.scrollTop = body.scrollHeight;
+        }
+    </script>
+    """
+    components.html(js, height=0, width=0)
+
+# --- 5. DISEÑO VISUAL "MODO FOLIO BLANCO" (CSS V18 - INTACTO) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA TOTAL === */
@@ -83,41 +97,36 @@ st.markdown("""
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. FONDO BLANCO PURO (ELIMINANDO CUALQUIER VERDE RESIDUAL) === */
+    /* === 2. FONDO BLANCO PURO === */
     .stApp, [data-testid="stAppViewContainer"], .main { 
         background-color: #ffffff !important; 
         font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     
-    /* === 3. BURBUJAS DE CHAT (ADIÓS VERDE EN TEXTOS) === */
-    
-    /* ELIMINAMOS EL COLOR DE FONDO POR DEFECTO DE LOS MENSAJES */
-    .stChatMessage {
-        background-color: transparent !important;
-    }
+    /* === 3. BURBUJAS DE CHAT === */
+    .stChatMessage { background-color: transparent !important; }
 
-    /* USUARIO: Gris Suave (Muy legible, descansa la vista) */
+    /* USUARIO: Gris Suave */
     div[data-testid="stChatMessage"]:nth-child(odd) { 
-        background-color: #f3f4f6 !important; /* Gris claro */
+        background-color: #f3f4f6 !important; 
         border: 1px solid #e5e7eb !important;
         border-radius: 12px !important;
-        color: #111827 !important; /* Negro suave */
+        color: #111827 !important; 
         padding: 15px !important;
     }
-    /* Forzamos texto negro en usuario */
     div[data-testid="stChatMessage"]:nth-child(odd) p,
     div[data-testid="stChatMessage"]:nth-child(odd) div { 
         color: #111827 !important; 
     }
     
-    /* IA (GODZILLA): Blanco con Borde (Tipo Documento) */
+    /* IA (GODZILLA): Blanco con Borde */
     div[data-testid="stChatMessage"]:nth-child(even) { 
         background-color: #ffffff !important; 
-        border: 1px solid #d1d5db !important; /* Borde gris definido */
+        border: 1px solid #d1d5db !important; 
         border-radius: 12px !important;
-        color: #000000 !important; /* Negro puro */
+        color: #000000 !important; 
         padding: 15px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* Sombra muy sutil */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
     }
     div[data-testid="stChatMessage"]:nth-child(even) p, 
     div[data-testid="stChatMessage"]:nth-child(even) li,
@@ -125,23 +134,15 @@ st.markdown("""
         color: #000000 !important;
     }
 
-    /* === 4. TABLAS CERRADAS (GRID COMPLETO) === */
+    /* === 4. TABLAS CERRADAS === */
     div[data-testid="stMarkdownContainer"] table {
-        width: 100%;
-        border-collapse: collapse !important;
-        border: 1px solid #374151 !important; /* Borde exterior */
+        width: 100%; border-collapse: collapse !important; border: 1px solid #374151 !important;
     }
     div[data-testid="stMarkdownContainer"] th {
-        background-color: #e5e7eb !important; /* Cabecera gris */
-        color: #000000 !important;
-        border: 1px solid #9ca3af !important; /* REJILLA COMPLETA */
-        padding: 8px;
+        background-color: #e5e7eb !important; color: #000000 !important; border: 1px solid #9ca3af !important; padding: 8px;
     }
     div[data-testid="stMarkdownContainer"] td {
-        border: 1px solid #d1d5db !important; /* REJILLA COMPLETA EN CELDAS */
-        padding: 8px;
-        color: #000000;
-        vertical-align: top;
+        border: 1px solid #d1d5db !important; padding: 8px; color: #000000; vertical-align: top;
     }
 
     /* === 5. BOTÓN MENÚ FLOTANTE === */
@@ -159,17 +160,12 @@ st.markdown("""
         position: fixed; top: 15px; left: 15px;
     }
 
-    /* === 6. CABECERA (LA MARCA VERDE SE MANTIENE SOLO AQUÍ) === */
+    /* === 6. CABECERA === */
     .header-container {
         background: linear-gradient(90deg, #166534 0%, #15803d 100%);
-        padding: 25px;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-        margin-bottom: 30px;
-        margin-top: 50px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border-bottom: 4px solid #4ade80;
+        padding: 25px; border-radius: 10px; color: white; text-align: center;
+        margin-bottom: 30px; margin-top: 50px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid #4ade80;
     }
     .header-container h1 { font-size: 2.5rem; margin: 0; font-weight: 800;}
     .header-container p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
@@ -187,7 +183,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. FUNCIONES AUXILIARES ---
+# --- 6. FUNCIONES AUXILIARES ---
 def save_uploaded_file(uploaded_file):
     try:
         with open(os.path.join(DOCS_DIR, uploaded_file.name), "wb") as f:
@@ -241,7 +237,7 @@ def extract_text_from_pdfs(file_list):
         except: pass
     return text
 
-# --- 6. CEREBRO: RULETA + FORMATO VERTICAL ---
+# --- 7. CEREBRO: RULETA + FORMATO VERTICAL ---
 def get_system_prompt(mode):
     base = "Eres GodzillaBot, experto en legislación. Fuente: PDFs adjuntos. "
     
@@ -254,7 +250,6 @@ def get_system_prompt(mode):
         ]
         examinador = random.choice(personalidades)
         
-        # INSTRUCCIÓN CLAVE PARA SEPARAR LÍNEAS: "Usa una lista Markdown"
         return base + f"""
         MODO: SIMULACRO TEST. Personalidad: {examinador}.
         
@@ -272,7 +267,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 7. INTERFAZ ---
+# --- 8. INTERFAZ ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -322,9 +317,14 @@ if "messages" not in st.session_state: st.session_state.messages = []
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
+# --- LÓGICA DE ENVÍO Y SCROLL ---
 if prompt := st.chat_input("Escribe tu pregunta..."):
+    # 1. Guardar y mostrar mensaje usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
+    
+    # 2. ACTIVAR SCROLL INMEDIATO (Para bajar al spinner)
+    auto_scroll()
 
     if not files:
         st.warning("⚠️ Selecciona documentos en el menú lateral.")
@@ -334,7 +334,7 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             full_resp = ""
             
             try:
-                with st.spinner("🦖 Procesando (Paciencia activada)..."): 
+                with st.spinner("🦖 Procesando..."): 
                     text = extract_text_from_pdfs(files)
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text[:800000]}\nUSER: {prompt}"
                     
@@ -350,6 +350,9 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
                                 placeholder.markdown(full_resp + "▌")
                         placeholder.markdown(full_resp)
                         st.session_state.messages.append({"role": "assistant", "content": full_resp})
+                        
+                        # 3. ACTIVAR SCROLL AL FINALIZAR (Para ver botones)
+                        auto_scroll()
                 
                 if full_resp and "Error" not in full_resp:
                     st.markdown("---")
