@@ -8,9 +8,8 @@ from datetime import datetime
 import io
 import time
 import random
-import streamlit.components.v1 as components
 
-# --- 1. SEGURIDAD DE LIBRERÍAS (INTACTO) ---
+# --- 1. SEGURIDAD DE LIBRERÍAS ---
 try:
     from docx import Document
     from docx.shared import Pt
@@ -18,7 +17,7 @@ try:
 except ImportError:
     WORD_AVAILABLE = False
 
-# --- 2. CONFIGURACIÓN (INTACTO) ---
+# --- 2. CONFIGURACIÓN BÁSICA ---
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
@@ -32,7 +31,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="collapsed" 
+    initial_sidebar_state="auto" # Dejamos que Streamlit decida lo mejor
 )
 
 DOCS_DIR = "documentos"
@@ -40,13 +39,17 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. GESTIÓN DE ESTADO (INTACTO) ---
+# --- 3. LÓGICA DE CEREBRO (INTACTA Y POTENTE) ---
+
+# Gestión de Estado
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
 if "last_files" not in st.session_state:
     st.session_state.last_files = []
+if "messages" not in st.session_state: 
+    st.session_state.messages = []
 
-# --- 4. LÓGICA (INTACTO) ---
+# Lectura Rápida
 @st.cache_data(show_spinner=False)
 def get_pdf_text_fast(file_names):
     text = ""
@@ -59,6 +62,7 @@ def get_pdf_text_fast(file_names):
         except: continue
     return text
 
+# Selección de Modelos
 @st.cache_resource
 def get_model_list():
     try:
@@ -73,13 +77,14 @@ def get_model_list():
 
 MODELS_AVAILABLE = get_model_list()
 
+# Generación con Paciencia (Reintentos)
 def generate_response_with_patience(prompt_text):
     max_retries = 3
     frases_espera = [
-        "🦖 Godzilla está recargando su aliento atómico...",
-        "⏳ Negociando prioridad con Google...",
-        "🦕 Masticando gigas de normativa...",
-        "🔥 Buscando el artículo exacto en la red neuronal..."
+        "🦖 Godzilla está recargando...",
+        "⏳ Negociando con Google...",
+        "🦕 Procesando normativa...",
+        "🔥 Un momento..."
     ]
     
     for attempt in range(max_retries):
@@ -93,7 +98,7 @@ def generate_response_with_patience(prompt_text):
                     wait_time = (attempt + 1) * 2 
                     if attempt >= 0: 
                          msg = random.choice(frases_espera)
-                         st.toast(f"{msg} (Reintentando...)", icon="🦖")
+                         st.toast(f"{msg} (Reintento {attempt+1})", icon="🦖")
                     time.sleep(wait_time)
                     continue
                 if "404" in error_msg:
@@ -101,127 +106,7 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-def auto_scroll():
-    js = """
-    <script>
-        setTimeout(function() {
-            var body = window.parent.document.querySelector(".main");
-            if (body) { body.scrollTop = body.scrollHeight; }
-        }, 300);
-    </script>
-    """
-    components.html(js, height=0, width=0)
-
-# --- 5. ESTÉTICA OPTIMIZADA (CSS MODIFICADO PARA MENÚ) ---
-st.markdown("""
-<style>
-    /* 1. CONFIGURACIÓN BASE */
-    [data-testid="stHeader"] { 
-        background-color: transparent !important; 
-        z-index: 1 !important; 
-        height: 60px !important; /* Asegurar altura para que no oculte cosas */
-    }
-    
-    /* Ocultar elementos molestos, PERO NO EL CONTENEDOR DEL MENÚ */
-    [data-testid="stToolbar"] { display: none !important; }
-    [data-testid="stDecoration"] { display: none !important; }
-    footer { visibility: hidden; }
-
-    /* 2. FONDO Y TEXTO */
-    .stApp, [data-testid="stAppViewContainer"], .main { 
-        background-color: #ffffff !important; 
-        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-    }
-
-    /* 3. ¡¡¡EL BOTÓN DEL MENÚ (LA CLAVE)!!! */
-    /* Lo forzamos a ser visible, fijo y por encima de todo */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        background-color: white !important;
-        color: #16a34a !important; /* Verde */
-        border: 2px solid #16a34a !important;
-        border-radius: 50% !important;
-        width: 50px !important;
-        height: 50px !important;
-        align-items: center;
-        justify-content: center;
-        
-        /* POSICIONAMIENTO FIJO AGRESIVO */
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 9999999 !important; /* Por encima del propio Dios */
-        
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
-    }
-    
-    /* Asegurar que el icono dentro del botón sea verde */
-    [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #16a34a !important;
-        width: 30px !important;
-        height: 30px !important;
-    }
-
-    /* 4. CHAT BUBBLES */
-    .stChatMessage { background-color: transparent !important; }
-    div[data-testid="stChatMessage"]:nth-child(odd) { 
-        background-color: #f3f4f6 !important; 
-        border: 1px solid #e5e7eb !important; border-radius: 12px !important;
-        color: #111827 !important; padding: 12px !important;
-    }
-    div[data-testid="stChatMessage"]:nth-child(even) { 
-        background-color: #ffffff !important; 
-        border: 1px solid #d1d5db !important; border-radius: 12px !important;
-        color: #000000 !important; padding: 12px !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-    }
-    div[data-testid="stChatMessage"] * { color: inherit !important; }
-
-    /* 5. INPUT IPHONE FIX */
-    .stChatInput textarea { font-size: 16px !important; }
-
-    /* 6. CABECERA */
-    .header-container {
-        background: linear-gradient(90deg, #166534 0%, #15803d 100%);
-        padding: 20px; border-radius: 10px; color: white; text-align: center;
-        margin-bottom: 20px; 
-        margin-top: 50px; /* Margen superior para que el botón no tape el título */
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid #4ade80;
-    }
-    .header-container h1 { font-size: 2.2rem; margin: 0; font-weight: 800;}
-    .header-container p { font-size: 1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
-
-    /* 7. MÓVIL RESPONSIVE */
-    @media only screen and (max-width: 768px) {
-        .block-container { padding-top: 4rem !important; padding-left: 0.5rem; padding-right: 0.5rem; }
-        .header-container { padding: 15px; margin-top: 45px; }
-        .header-container h1 { font-size: 1.6rem !important; }
-    }
-
-    /* 8. LANDSCAPE */
-    @media only screen and (orientation: landscape) and (max-height: 600px) {
-        .block-container { padding-top: 0.5rem !important; }
-        .header-container {
-            padding: 5px !important; margin-bottom: 10px !important; margin-top: 0px !important;
-            display: flex; align-items: center; justify-content: center; min-height: 40px;
-        }
-        .header-container h1 { font-size: 1.1rem !important; margin: 0; }
-        .header-container p { display: none !important; }
-        /* Botón más pequeño en horizontal */
-        [data-testid="stSidebarCollapsedControl"] {
-            width: 35px !important; height: 35px !important; top: 5px !important; left: 5px !important;
-        }
-    }
-    
-    /* 9. TABLAS */
-    div[data-testid="stMarkdownContainer"] table { width: 100%; border-collapse: collapse !important; border: 1px solid #374151 !important; }
-    div[data-testid="stMarkdownContainer"] th { background-color: #e5e7eb !important; color: #000000 !important; border: 1px solid #9ca3af !important; padding: 6px; }
-    div[data-testid="stMarkdownContainer"] td { border: 1px solid #d1d5db !important; padding: 6px; color: #000000; vertical-align: top; }
-</style>
-""", unsafe_allow_html=True)
-
-# --- 6. FUNCIONES DOCS (INTACTO) ---
+# --- 4. FUNCIONES DE APOYO (WORD/HISTORIAL) ---
 def create_word_docx(text_content):
     if not WORD_AVAILABLE: return None
     doc = Document()
@@ -265,6 +150,7 @@ def load_session_history(filename):
         st.rerun()
     except: st.error("Error")
 
+# --- 5. PROMPTS DEL SISTEMA ---
 def get_system_prompt(mode):
     base = "Eres GodzillaBot, experto en legislación. Fuente: PDFs adjuntos. "
     if "Simulacro" in mode:
@@ -281,79 +167,76 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 7. MENÚ LATERAL (INTACTO) ---
+# --- 6. INTERFAZ LIMPIA (SIN CSS HACKS) ---
+
+# BARRA LATERAL (NATIVA)
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
-    st.markdown("## 🦖 Guarida")
+    st.header("🦖 Guarida Godzilla")
     
-    with st.expander("📤 Cargar Temario (PDFs)", expanded=False):
-        up = st.file_uploader("Arrastra archivos aquí", type="pdf")
+    with st.expander("📤 Cargar Temario"):
+        up = st.file_uploader("Subir PDFs", type="pdf")
         if up and save_uploaded_file(up): st.rerun()
     
     files_available = [f for f in os.listdir(DOCS_DIR) if f.endswith('.pdf')]
     if files_available:
-        files = st.multiselect("📚 Documentos Activos:", files_available, default=[]) 
+        files = st.multiselect("📚 Temario Activo:", files_available, default=[]) 
     else:
         files = []
         st.info("ℹ️ Sube PDFs para empezar.")
     
-    st.markdown("---")
-    st.markdown("### 🎯 Objetivo de Hoy")
+    st.divider()
     mode = st.radio("Estrategia:", 
-        ["💀 Simulacro de Examen (Test)", "💬 Chat Interactivo con Temario", 
-         "📝 Resumen de Alto Rendimiento", "📊 Extracción de Datos a Excel"])
+        ["💀 Simulacro de Examen (Test)", "💬 Chat Interactivo", 
+         "📝 Resumen Alto Rendimiento", "📊 Datos a Excel"])
     
-    st.markdown("---")
+    st.divider()
     c1, c2 = st.columns(2)
     if c1.button("💾 Guardar"): save_session_history()
-    if c2.button("🗑️ Reiniciar"): st.session_state.messages = []; st.rerun()
+    if c2.button("🗑️ Borrar"): st.session_state.messages = []; st.rerun()
     
     sessions = [f for f in os.listdir(HISTORY_DIR) if f.endswith('.json')]
     if sessions:
-        load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
-        if load != "..." and st.button("Abrir"): load_session_history(load)
+        load = st.selectbox("Historial:", ["..."] + sorted(sessions, reverse=True))
+        if load != "..." and st.button("Cargar"): load_session_history(load)
 
-# --- 8. ZONA PRINCIPAL (INTACTO) ---
-st.markdown("""
-<div class="header-container">
-    <h1>🦖 GodzillaBot Oposiciones</h1>
-    <p>Destruyendo tus dudas, dominando el temario.</p>
-</div>
-""", unsafe_allow_html=True)
+# ZONA PRINCIPAL
+st.title("🦖 GodzillaBot Oposiciones")
+st.caption("Destruyendo tus dudas, dominando el temario.")
 
+# Pre-carga de Texto (Optimización)
 if files != st.session_state.last_files:
     if files:
-        with st.spinner("🦖 Digiriendo documentos nuevos..."):
+        with st.spinner("Procesando documentos..."):
             st.session_state.pdf_text = get_pdf_text_fast(files)
             st.session_state.last_files = files
     else:
         st.session_state.pdf_text = ""
         st.session_state.last_files = []
 
-if "messages" not in st.session_state: st.session_state.messages = []
-
+# Mostrar Chat
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
+        # Botones de descarga (si es asistente)
         if msg["role"] == "assistant":
             key_base = f"btn_{i}"
-            col1, col2 = st.columns([1, 1])
-            with col1:
+            c1, c2 = st.columns([1, 4]) # Ajuste columnas
+            with c1:
                 if WORD_AVAILABLE:
                     docx = create_word_docx(msg["content"])
                     st.download_button("📄 Word", docx, f"Godzilla_{i}.docx", 
                                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"{key_base}_w")
-            with col2:
+            with c2:
                 if "|" in msg["content"]:
                     st.download_button("📊 Excel", msg["content"], f"datos_{i}.csv", "text/csv", key=f"{key_base}_x")
 
+# Input Usuario
 if prompt := st.chat_input("Escribe tu pregunta..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
-    auto_scroll()
 
     if not files:
-        st.warning("⚠️ Selecciona documentos en el menú lateral.")
+        st.warning("⚠️ Abre el menú (flecha arriba-izquierda) y selecciona documentos.")
     else:
         with st.chat_message("assistant"):
             placeholder = st.empty()
@@ -361,12 +244,12 @@ if prompt := st.chat_input("Escribe tu pregunta..."):
             try:
                 text_context = st.session_state.pdf_text 
                 
-                with st.spinner("🦖 Godzilla responde..."): 
+                with st.spinner("Generando respuesta..."): 
                     prompt_final = f"{get_system_prompt(mode)}\nDOCS: {text_context[:800000]}\nUSER: {prompt}"
                     response_obj = generate_response_with_patience(prompt_final)
 
                     if isinstance(response_obj, str) and response_obj.startswith("Error_Quota"):
-                        st.error("🛑 Agotado total. Necesito 2 min.")
+                        st.error("🛑 Agotado. Espera un poco.")
                     else:
                         for chunk in response_obj:
                             if chunk.text:
