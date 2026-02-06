@@ -74,7 +74,7 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 4. DISEÑO VISUAL "MODO PAPEL OFICIAL" (CSS V17) ---
+# --- 4. DISEÑO VISUAL "MODO FOLIO BLANCO" (CSS V18) ---
 st.markdown("""
 <style>
     /* === 1. LIMPIEZA TOTAL === */
@@ -83,31 +83,41 @@ st.markdown("""
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
-    /* === 2. FONDO BLANCO PURO (ADIÓS VERDE) === */
-    .stApp, [data-testid="stAppViewContainer"] { 
+    /* === 2. FONDO BLANCO PURO (ELIMINANDO CUALQUIER VERDE RESIDUAL) === */
+    .stApp, [data-testid="stAppViewContainer"], .main { 
         background-color: #ffffff !important; 
         font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     
-    /* === 3. BURBUJAS DE CHAT (LEIBILIDAD MÁXIMA) === */
-    /* Usuario: Mantenemos verde elegante */
-    div[data-testid="stChatMessage"]:nth-child(odd) { 
-        background-color: #15803d; 
-        color: white;
-        border: none;
-        border-radius: 15px;
+    /* === 3. BURBUJAS DE CHAT (ADIÓS VERDE EN TEXTOS) === */
+    
+    /* ELIMINAMOS EL COLOR DE FONDO POR DEFECTO DE LOS MENSAJES */
+    .stChatMessage {
+        background-color: transparent !important;
     }
-    div[data-testid="stChatMessage"]:nth-child(odd) p { 
-        color: white !important; 
+
+    /* USUARIO: Gris Suave (Muy legible, descansa la vista) */
+    div[data-testid="stChatMessage"]:nth-child(odd) { 
+        background-color: #f3f4f6 !important; /* Gris claro */
+        border: 1px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        color: #111827 !important; /* Negro suave */
+        padding: 15px !important;
+    }
+    /* Forzamos texto negro en usuario */
+    div[data-testid="stChatMessage"]:nth-child(odd) p,
+    div[data-testid="stChatMessage"]:nth-child(odd) div { 
+        color: #111827 !important; 
     }
     
-    /* IA: BLANCO con Borde Gris (Tipo Documento) */
+    /* IA (GODZILLA): Blanco con Borde (Tipo Documento) */
     div[data-testid="stChatMessage"]:nth-child(even) { 
         background-color: #ffffff !important; 
         border: 1px solid #d1d5db !important; /* Borde gris definido */
-        border-radius: 5px !important; /* Bordes más cuadrados tipo folio */
-        color: #000000 !important; /* Texto negro puro */
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sutil sombra */
+        border-radius: 12px !important;
+        color: #000000 !important; /* Negro puro */
+        padding: 15px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* Sombra muy sutil */
     }
     div[data-testid="stChatMessage"]:nth-child(even) p, 
     div[data-testid="stChatMessage"]:nth-child(even) li,
@@ -115,22 +125,23 @@ st.markdown("""
         color: #000000 !important;
     }
 
-    /* === 4. TABLAS CERRADAS (TIPO EXCEL) === */
+    /* === 4. TABLAS CERRADAS (GRID COMPLETO) === */
     div[data-testid="stMarkdownContainer"] table {
         width: 100%;
         border-collapse: collapse !important;
-        border: 2px solid #374151 !important; /* Borde exterior grueso */
+        border: 1px solid #374151 !important; /* Borde exterior */
     }
     div[data-testid="stMarkdownContainer"] th {
-        background-color: #f3f4f6 !important; /* Cabecera gris */
+        background-color: #e5e7eb !important; /* Cabecera gris */
         color: #000000 !important;
-        border: 1px solid #9ca3af !important; /* Bordes internos visibles */
-        padding: 10px;
+        border: 1px solid #9ca3af !important; /* REJILLA COMPLETA */
+        padding: 8px;
     }
     div[data-testid="stMarkdownContainer"] td {
-        border: 1px solid #9ca3af !important; /* Bordes internos visibles y cerrados */
-        padding: 10px;
+        border: 1px solid #d1d5db !important; /* REJILLA COMPLETA EN CELDAS */
+        padding: 8px;
         color: #000000;
+        vertical-align: top;
     }
 
     /* === 5. BOTÓN MENÚ FLOTANTE === */
@@ -148,24 +159,27 @@ st.markdown("""
         position: fixed; top: 15px; left: 15px;
     }
 
-    /* === 6. CABECERA === */
+    /* === 6. CABECERA (LA MARCA VERDE SE MANTIENE SOLO AQUÍ) === */
     .header-container {
         background: linear-gradient(90deg, #166534 0%, #15803d 100%);
         padding: 25px;
-        border-radius: 8px;
+        border-radius: 10px;
         color: white;
         text-align: center;
         margin-bottom: 30px;
         margin-top: 50px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-bottom: 4px solid #4ade80;
     }
-    .header-container h1 { font-size: 2.2rem; margin: 0; font-weight: 700;}
+    .header-container h1 { font-size: 2.5rem; margin: 0; font-weight: 800;}
+    .header-container p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
 
     /* Media Queries */
     @media only screen and (max-width: 768px) {
         .block-container { padding-top: 4rem !important; }
         .header-container { padding: 15px; margin-top: 40px; }
-        .header-container h1 { font-size: 1.5rem !important; }
+        .header-container h1 { font-size: 1.8rem !important; }
+        .header-container p { font-size: 0.9rem; display: block; }
     }
     @media only screen and (min-width: 769px) {
         section[data-testid="stSidebar"] { background-color: #f9fafb; border-right: 1px solid #e5e7eb; }
