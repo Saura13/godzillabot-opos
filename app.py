@@ -10,7 +10,7 @@ import time
 import random
 import streamlit.components.v1 as components
 
-# --- 1. SEGURIDAD DE LIBRERÍAS ---
+# --- 1. SEGURIDAD DE LIBRERÍAS (INTACTO) ---
 try:
     from docx import Document
     from docx.shared import Pt
@@ -18,7 +18,7 @@ try:
 except ImportError:
     WORD_AVAILABLE = False
 
-# --- 2. CONFIGURACIÓN ---
+# --- 2. CONFIGURACIÓN (INTACTO) ---
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
@@ -40,13 +40,13 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. GESTIÓN DE ESTADO (MEMORIA RAM) ---
+# --- 3. GESTIÓN DE ESTADO (INTACTO) ---
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
 if "last_files" not in st.session_state:
     st.session_state.last_files = []
 
-# --- 4. LECTURA RÁPIDA DE PDFS ---
+# --- 4. LÓGICA DE VELOCIDAD Y MODELOS (INTACTO) ---
 @st.cache_data(show_spinner=False)
 def get_pdf_text_fast(file_names):
     text = ""
@@ -59,20 +59,13 @@ def get_pdf_text_fast(file_names):
         except: continue
     return text
 
-# --- 5. LÓGICA DE MODELOS (OPTIMIZACIÓN DE VELOCIDAD) ---
 @st.cache_resource
 def get_model_list():
     try:
         all_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # ESTRATEGIA DE VELOCIDAD:
-        # 1. Buscar modelos "Flash" (Son los más rápidos)
         flash_models = [m for m in all_models if 'flash' in m.lower()]
-        # 2. Buscar modelos "Pro" (Respaldo potente)
         pro_models = [m for m in all_models if 'pro' in m.lower() and 'vision' not in m.lower()]
-        
-        # Ordenamos: Primero todos los Flash, luego los Pro
         priorities = flash_models + pro_models
-        
         if not priorities: return ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
         return priorities
     except:
@@ -82,7 +75,6 @@ MODELS_AVAILABLE = get_model_list()
 
 def generate_response_with_patience(prompt_text):
     max_retries = 3
-    # MENSAJES DE ESPERA (RECUPERADOS)
     frases_espera = [
         "🦖 Godzilla está recargando su aliento atómico...",
         "⏳ Negociando prioridad con Google...",
@@ -98,25 +90,19 @@ def generate_response_with_patience(prompt_text):
                 return model.generate_content(prompt_text, stream=True)
             except Exception as e:
                 error_msg = str(e)
-                # Si es error de cuota (429), activamos la espera con personalidad
                 if "429" in error_msg or "quota" in error_msg.lower():
-                    # OPTIMIZACIÓN: Espera inicial más corta (2s, luego 4s, luego 6s)
                     wait_time = (attempt + 1) * 2 
-                    
-                    # Mostrar mensaje divertido (Toast)
                     if attempt >= 0: 
                          msg = random.choice(frases_espera)
                          st.toast(f"{msg} (Reintentando...)", icon="🦖")
-                    
                     time.sleep(wait_time)
                     continue
-                # Si el modelo no existe (404), pasamos al siguiente sin esperar
                 if "404" in error_msg:
                     continue
                 continue
     return "Error_Quota_Final"
 
-# --- 6. SCROLL AUTOMÁTICO ---
+# --- 5. SCROLL (INTACTO) ---
 def auto_scroll():
     js = """
     <script>
@@ -128,82 +114,130 @@ def auto_scroll():
     """
     components.html(js, height=0, width=0)
 
-# --- 7. ESTÉTICA "MODO PAPEL" (MANTENIDA) ---
+# --- 6. ESTÉTICA OPTIMIZADA MÓVIL (AQUÍ ESTÁ LA MAGIA) ---
 st.markdown("""
 <style>
+    /* === 1. LIMPIEZA TOTAL === */
     [data-testid="stHeader"] { background-color: transparent !important; z-index: 90 !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
     footer { visibility: hidden; }
 
+    /* === 2. FONDO Y FUENTES === */
     .stApp, [data-testid="stAppViewContainer"], .main { 
         background-color: #ffffff !important; 
         font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     
+    /* === 3. OPTIMIZACIÓN DE INPUT (ANTI-ZOOM IPHONE) === */
+    /* Forzamos 16px en el input para que iOS no haga zoom al escribir */
+    .stChatInput textarea {
+        font-size: 16px !important;
+    }
+
+    /* === 4. CHAT BUBBLES OPTIMIZADAS === */
     .stChatMessage { background-color: transparent !important; }
 
-    /* USUARIO */
     div[data-testid="stChatMessage"]:nth-child(odd) { 
         background-color: #f3f4f6 !important; 
         border: 1px solid #e5e7eb !important; border-radius: 12px !important;
-        color: #111827 !important; padding: 15px !important;
+        color: #111827 !important; padding: 12px !important; /* Padding ajustado para móvil */
     }
     div[data-testid="stChatMessage"]:nth-child(odd) * { color: #111827 !important; }
     
-    /* GODZILLA */
     div[data-testid="stChatMessage"]:nth-child(even) { 
         background-color: #ffffff !important; 
         border: 1px solid #d1d5db !important; border-radius: 12px !important;
-        color: #000000 !important; padding: 15px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+        color: #000000 !important; padding: 12px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
     }
     div[data-testid="stChatMessage"]:nth-child(even) * { color: #000000 !important; }
 
-    /* TABLAS */
+    /* === 5. BOTÓN MENÚ (SIDEBAR TRIGGER) === */
+    /* Aseguramos que sea fácil de tocar en móvil */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: block !important;
+        background-color: white !important;
+        border: 2px solid #16a34a !important;
+        color: #16a34a !important;
+        border-radius: 50% !important;
+        width: 48px !important; /* Un poco más grande para el dedo */
+        height: 48px !important;
+        padding: 8px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+        z-index: 999999 !important; 
+        position: fixed; 
+        top: 10px; 
+        left: 10px;
+    }
+
+    /* === 6. CABECERA Y RESPONSIVIDAD === */
+    .header-container {
+        background: linear-gradient(90deg, #166534 0%, #15803d 100%);
+        padding: 20px; border-radius: 10px; color: white; text-align: center;
+        margin-bottom: 20px; margin-top: 50px; /* Margen para salvar el botón */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid #4ade80;
+    }
+    .header-container h1 { font-size: 2.2rem; margin: 0; font-weight: 800;}
+    .header-container p { font-size: 1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
+
+    /* MÓVIL PORTRAIT (VERTICAL) */
+    @media only screen and (max-width: 768px) {
+        /* Ajuste de márgenes laterales para ganar espacio */
+        .block-container { 
+            padding-top: 4rem !important; 
+            padding-left: 0.5rem !important; 
+            padding-right: 0.5rem !important; 
+        }
+        .header-container { padding: 15px; margin-top: 45px; }
+        .header-container h1 { font-size: 1.6rem !important; }
+        .header-container p { font-size: 0.8rem; }
+    }
+
+    /* MÓVIL LANDSCAPE (HORIZONTAL) - LA CLAVE */
+    @media only screen and (orientation: landscape) and (max-height: 600px) {
+        .block-container { padding-top: 0.5rem !important; }
+        
+        /* Cabecera ultra-compacta */
+        .header-container {
+            padding: 5px !important; 
+            margin-bottom: 10px !important; 
+            margin-top: 0px !important;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 40px;
+            border-radius: 0 0 10px 10px; /* Solo bordes de abajo */
+        }
+        .header-container h1 { font-size: 1.1rem !important; margin: 0; }
+        .header-container p { display: none !important; } /* Ocultar subtítulo */
+        
+        /* Botón sidebar más pequeño para no molestar */
+        [data-testid="stSidebarCollapsedControl"] {
+            width: 35px !important; 
+            height: 35px !important; 
+            padding: 5px !important;
+            top: 5px !important; 
+            left: 5px !important;
+        }
+    }
+
+    /* === 7. TABLAS PERFECTAS === */
     div[data-testid="stMarkdownContainer"] table {
         width: 100%; border-collapse: collapse !important; border: 1px solid #374151 !important;
     }
     div[data-testid="stMarkdownContainer"] th {
         background-color: #e5e7eb !important; color: #000000 !important; 
-        border: 1px solid #9ca3af !important; padding: 8px;
+        border: 1px solid #9ca3af !important; padding: 6px; font-size: 0.9rem;
     }
     div[data-testid="stMarkdownContainer"] td {
-        border: 1px solid #d1d5db !important; padding: 8px; color: #000000; vertical-align: top;
-    }
-
-    /* BOTÓN FLOTANTE */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: block !important; background-color: white !important;
-        border: 2px solid #16a34a !important; color: #16a34a !important;
-        border-radius: 50% !important; width: 45px !important; height: 45px !important;
-        padding: 5px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
-        z-index: 999999 !important; position: fixed; top: 15px; left: 15px;
-    }
-
-    /* CABECERA */
-    .header-container {
-        background: linear-gradient(90deg, #166534 0%, #15803d 100%);
-        padding: 25px; border-radius: 10px; color: white; text-align: center;
-        margin-bottom: 30px; margin-top: 50px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid #4ade80;
-    }
-    .header-container h1 { font-size: 2.5rem; margin: 0; font-weight: 800;}
-    .header-container p { font-size: 1.1rem; opacity: 0.9; margin-top: 5px; font-style: italic; }
-
-    @media only screen and (max-width: 768px) {
-        .block-container { padding-top: 4rem !important; }
-        .header-container { padding: 15px; margin-top: 40px; }
-        .header-container h1 { font-size: 1.8rem !important; }
-        .header-container p { font-size: 0.9rem; display: block; }
-    }
-    @media only screen and (min-width: 769px) {
-        section[data-testid="stSidebar"] { background-color: #f9fafb; border-right: 1px solid #e5e7eb; }
+        border: 1px solid #d1d5db !important; padding: 6px; color: #000000; 
+        vertical-align: top; font-size: 0.9rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 8. FUNCIONES DOCS ---
+# --- 7. FUNCIONES DOCS Y PROMPTS (INTACTO) ---
 def create_word_docx(text_content):
     if not WORD_AVAILABLE: return None
     doc = Document()
@@ -247,7 +281,6 @@ def load_session_history(filename):
         st.rerun()
     except: st.error("Error")
 
-# --- 9. PROMPTS ---
 def get_system_prompt(mode):
     base = "Eres GodzillaBot, experto en legislación. Fuente: PDFs adjuntos. "
     if "Simulacro" in mode:
@@ -264,7 +297,7 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 10. MENÚ LATERAL ---
+# --- 8. MENÚ LATERAL (INTACTO) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=70) 
     st.markdown("## 🦖 Guarida")
@@ -296,7 +329,7 @@ with st.sidebar:
         load = st.selectbox("Recuperar:", ["..."] + sorted(sessions, reverse=True))
         if load != "..." and st.button("Abrir"): load_session_history(load)
 
-# --- 11. ZONA PRINCIPAL ---
+# --- 9. ZONA PRINCIPAL (INTACTO) ---
 st.markdown("""
 <div class="header-container">
     <h1>🦖 GodzillaBot Oposiciones</h1>
@@ -304,7 +337,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# GESTIÓN INTELIGENTE DE CONTEXTO
+# GESTIÓN DE CONTEXTO
 if files != st.session_state.last_files:
     if files:
         with st.spinner("🦖 Digiriendo documentos nuevos..."):
@@ -316,7 +349,7 @@ if files != st.session_state.last_files:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# HISTORIAL + BOTONES
+# HISTORIAL
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
