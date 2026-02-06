@@ -17,7 +17,7 @@ try:
 except ImportError:
     WORD_AVAILABLE = False
 
-# --- 2. CONFIGURACIÓN BÁSICA ---
+# --- 2. CONFIGURACIÓN ---
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
@@ -31,7 +31,7 @@ st.set_page_config(
     page_title="GodzillaBot Oposiciones", 
     page_icon="🦖", 
     layout="wide",
-    initial_sidebar_state="auto" # Dejamos que Streamlit decida lo mejor
+    initial_sidebar_state="auto"
 )
 
 DOCS_DIR = "documentos"
@@ -39,9 +39,64 @@ HISTORY_DIR = "historial_sesiones"
 if not os.path.exists(DOCS_DIR): os.makedirs(DOCS_DIR)
 if not os.path.exists(HISTORY_DIR): os.makedirs(HISTORY_DIR)
 
-# --- 3. LÓGICA DE CEREBRO (INTACTA Y POTENTE) ---
+# --- 3. ESTÉTICA RESPONSIVA (LA CLAVE) ---
+st.markdown("""
+<style>
+    /* 1. ESTILO BASE DEL TÍTULO (Limpio por defecto para Móvil) */
+    .header-container {
+        padding: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .header-container h1 { 
+        margin: 0; 
+        font-weight: 800;
+        font-size: 2rem;
+    }
+    .header-container p { 
+        font-size: 1rem; 
+        opacity: 0.8; 
+        margin-top: 5px; 
+        font-style: italic;
+    }
 
-# Gestión de Estado
+    /* 2. TRANSFORMACIÓN ÉPICA SOLO PARA PC (Pantallas grandes) */
+    @media only screen and (min-width: 769px) {
+        .header-container {
+            background: linear-gradient(90deg, #14532d 0%, #15803d 100%); /* Verde Godzilla */
+            padding: 40px;
+            border-radius: 15px;
+            color: white !important; /* Texto forzado a blanco en PC */
+            box-shadow: 0 4px 15px rgba(20, 83, 45, 0.3);
+            border-bottom: 5px solid #4ade80;
+            margin-bottom: 40px;
+        }
+        .header-container h1 { 
+            font-size: 3.5rem; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: white !important;
+        }
+        .header-container p { 
+            font-size: 1.3rem; 
+            color: #dcfce7 !important; /* Verde pálido */
+        }
+    }
+
+    /* 3. AJUSTES MÓVIL (Para asegurar limpieza) */
+    @media only screen and (max-width: 768px) {
+        /* En móvil, el contenedor es transparente y respeta el tema (Claro/Oscuro) */
+        .header-container {
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            padding-top: 0;
+        }
+        /* El color del texto lo decide Streamlit (Negro en claro, Blanco en oscuro) */
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- 4. LÓGICA DEL CEREBRO (INTACTA) ---
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
 if "last_files" not in st.session_state:
@@ -49,7 +104,6 @@ if "last_files" not in st.session_state:
 if "messages" not in st.session_state: 
     st.session_state.messages = []
 
-# Lectura Rápida
 @st.cache_data(show_spinner=False)
 def get_pdf_text_fast(file_names):
     text = ""
@@ -62,7 +116,6 @@ def get_pdf_text_fast(file_names):
         except: continue
     return text
 
-# Selección de Modelos
 @st.cache_resource
 def get_model_list():
     try:
@@ -77,7 +130,6 @@ def get_model_list():
 
 MODELS_AVAILABLE = get_model_list()
 
-# Generación con Paciencia (Reintentos)
 def generate_response_with_patience(prompt_text):
     max_retries = 3
     frases_espera = [
@@ -86,7 +138,6 @@ def generate_response_with_patience(prompt_text):
         "🦕 Procesando normativa...",
         "🔥 Un momento..."
     ]
-    
     for attempt in range(max_retries):
         for model_name in MODELS_AVAILABLE:
             try:
@@ -106,7 +157,6 @@ def generate_response_with_patience(prompt_text):
                 continue
     return "Error_Quota_Final"
 
-# --- 4. FUNCIONES DE APOYO (WORD/HISTORIAL) ---
 def create_word_docx(text_content):
     if not WORD_AVAILABLE: return None
     doc = Document()
@@ -150,7 +200,6 @@ def load_session_history(filename):
         st.rerun()
     except: st.error("Error")
 
-# --- 5. PROMPTS DEL SISTEMA ---
 def get_system_prompt(mode):
     base = "Eres GodzillaBot, experto en legislación. Fuente: PDFs adjuntos. "
     if "Simulacro" in mode:
@@ -167,11 +216,12 @@ def get_system_prompt(mode):
     else:
         return base + "Responde de forma técnica y estructurada."
 
-# --- 6. INTERFAZ LIMPIA (SIN CSS HACKS) ---
+# --- 5. INTERFAZ ---
 
 # BARRA LATERAL (NATIVA)
 with st.sidebar:
-    st.header("🦖 Guarida Godzilla")
+    st.image("https://cdn-icons-png.flaticon.com/512/1624/1624022.png", width=60)
+    st.markdown("### 🦖 Guarida")
     
     with st.expander("📤 Cargar Temario"):
         up = st.file_uploader("Subir PDFs", type="pdf")
@@ -199,11 +249,15 @@ with st.sidebar:
         load = st.selectbox("Historial:", ["..."] + sorted(sessions, reverse=True))
         if load != "..." and st.button("Cargar"): load_session_history(load)
 
-# ZONA PRINCIPAL
-st.title("🦖 GodzillaBot Oposiciones")
-st.caption("Destruyendo tus dudas, dominando el temario.")
+# CABECERA (CON LÓGICA PC/MÓVIL)
+st.markdown("""
+<div class="header-container">
+    <h1>🦖 GodzillaBot Oposiciones</h1>
+    <p>Destruyendo tus dudas, dominando el temario.</p>
+</div>
+""", unsafe_allow_html=True)
 
-# Pre-carga de Texto (Optimización)
+# Lógica Principal
 if files != st.session_state.last_files:
     if files:
         with st.spinner("Procesando documentos..."):
@@ -213,14 +267,12 @@ if files != st.session_state.last_files:
         st.session_state.pdf_text = ""
         st.session_state.last_files = []
 
-# Mostrar Chat
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]): 
         st.markdown(msg["content"])
-        # Botones de descarga (si es asistente)
         if msg["role"] == "assistant":
             key_base = f"btn_{i}"
-            c1, c2 = st.columns([1, 4]) # Ajuste columnas
+            c1, c2 = st.columns([1, 4])
             with c1:
                 if WORD_AVAILABLE:
                     docx = create_word_docx(msg["content"])
@@ -230,7 +282,6 @@ for i, msg in enumerate(st.session_state.messages):
                 if "|" in msg["content"]:
                     st.download_button("📊 Excel", msg["content"], f"datos_{i}.csv", "text/csv", key=f"{key_base}_x")
 
-# Input Usuario
 if prompt := st.chat_input("Escribe tu pregunta..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
